@@ -1,0 +1,671 @@
+openjdk version "21.0.10" 2026-01-20
+OpenJDK Runtime Environment (build 21.0.10+7-Ubuntu-124.04)
+OpenJDK 64-Bit Server VM (build 21.0.10+7-Ubuntu-124.04, mixed mode, sharing)
+Initialized native services in: /home/toor/.gradle/native
+Initialized jansi services in: /home/toor/.gradle/native
+The client will now receive all logging from the daemon (pid: 28346). The daemon log file: /home/toor/.gradle/daemon/8.14/daemon-28346.out.log
+Starting 20th build in daemon [uptime: 26 mins 57.684 secs, performance: 98%, GC rate: 0.00/s, heap usage: 0% of 512 MiB, non-heap usage: 43% of 384 MiB]
+Using 6 worker leases.
+Now considering [/home/toor/git/circleguard/circleguard] as hierarchies to watch
+Watching the file system is configured to be enabled if available
+File system watching is active
+Starting Build
+Resolved plugin [id: 'org.gradle.toolchains.foojay-resolver-convention', version: '0.8.0']
+Settings evaluated using settings file '/home/toor/git/circleguard/circleguard/settings.gradle.kts'.
+Projects loaded. Root project using build file '/home/toor/git/circleguard/circleguard/build.gradle.kts'.
+Included projects: [root project 'circleguard', project ':services', project ':services:circleguard-auth-service', project ':services:circleguard-dashboard-service', project ':services:circleguard-file-service', project ':services:circleguard-form-service', project ':services:circleguard-gateway-service', project ':services:circleguard-identity-service', project ':services:circleguard-notification-service', project ':services:circleguard-promotion-service']
+
+> Configure project :
+Evaluating root project 'circleguard' using build file '/home/toor/git/circleguard/circleguard/build.gradle.kts'.
+Resolved plugin [id: 'org.springframework.boot', version: '3.2.4', apply: false]
+Resolved plugin [id: 'io.spring.dependency-management', version: '1.1.4', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm', version: '1.9.24', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.spring', version: '1.9.24', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.jpa', version: '1.9.24', apply: false]
+Using Kotlin Gradle Plugin gradle82 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+Using Kotlin Gradle Plugin gradle82 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+Using Kotlin Gradle Plugin gradle82 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+Using Kotlin Gradle Plugin gradle82 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+Using Kotlin Gradle Plugin gradle82 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+Using Kotlin Gradle Plugin gradle82 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+Using Kotlin Gradle Plugin gradle82 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+Using Kotlin Gradle Plugin gradle82 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+Using Kotlin Gradle Plugin gradle82 variant
+kotlin scripting plugin: created the scripting discovery configuration: kotlinScriptDef
+kotlin scripting plugin: created the scripting discovery configuration: testKotlinScriptDef
+
+> Configure project :services
+Evaluating project ':services' using build file '/home/toor/git/circleguard/circleguard/services/build.gradle'.
+Path for java installation '/usr/lib/jvm/openjdk-21' (Common Linux Locations) auto-detected does not contain a java executable
+
+> Configure project :services:circleguard-auth-service
+Evaluating project ':services:circleguard-auth-service' using build file '/home/toor/git/circleguard/circleguard/services/circleguard-auth-service/build.gradle.kts'.
+Resolved plugin [id: 'org.springframework.boot']
+Resolved plugin [id: 'io.spring.dependency-management']
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.spring']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.jpa']
+Applying dependency management to configuration 'annotationProcessor' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'api' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'apiDependenciesMetadata' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'apiElements' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'archives' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'bootArchives' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'compileClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'compileOnly' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'compileOnlyDependenciesMetadata' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'default' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'developmentOnly' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'implementation' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'implementationDependenciesMetadata' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'intransitiveDependenciesMetadata' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'kotlinBuildToolsApiClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'kotlinCompilerClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathMain' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathTest' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'kotlinKlibCommonizerClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'kotlinNativeCompilerPluginClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'kotlinScriptDef' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'kotlinScriptDefExtensions' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'mainSourceElements' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'runtimeClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'runtimeElements' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'runtimeOnly' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testApi' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testApiDependenciesMetadata' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testCompileClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testCompileOnly' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testCompileOnlyDependenciesMetadata' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testImplementation' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testImplementationDependenciesMetadata' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testIntransitiveDependenciesMetadata' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testKotlinScriptDef' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testKotlinScriptDefExtensions' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'apiElements-published' in project 'circleguard-auth-service'
+Applying dependency management to configuration 'runtimeElements-published' in project 'circleguard-auth-service'
+
+> Configure project :services:circleguard-dashboard-service
+Evaluating project ':services:circleguard-dashboard-service' using build file '/home/toor/git/circleguard/circleguard/services/circleguard-dashboard-service/build.gradle.kts'.
+Resolved plugin [id: 'org.springframework.boot']
+Resolved plugin [id: 'io.spring.dependency-management']
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.spring']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.jpa']
+Applying dependency management to configuration 'annotationProcessor' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'api' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'apiDependenciesMetadata' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'apiElements' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'archives' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'bootArchives' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'compileClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'compileOnly' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'compileOnlyDependenciesMetadata' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'default' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'developmentOnly' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'implementation' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'implementationDependenciesMetadata' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'intransitiveDependenciesMetadata' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'kotlinBuildToolsApiClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'kotlinCompilerClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathMain' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathTest' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'kotlinKlibCommonizerClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'kotlinNativeCompilerPluginClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'kotlinScriptDef' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'kotlinScriptDefExtensions' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'mainSourceElements' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'runtimeClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'runtimeElements' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'runtimeOnly' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testApi' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testApiDependenciesMetadata' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testCompileClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testCompileOnly' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testCompileOnlyDependenciesMetadata' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testImplementation' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testImplementationDependenciesMetadata' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testIntransitiveDependenciesMetadata' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testKotlinScriptDef' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testKotlinScriptDefExtensions' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'apiElements-published' in project 'circleguard-dashboard-service'
+Applying dependency management to configuration 'runtimeElements-published' in project 'circleguard-dashboard-service'
+
+> Configure project :services:circleguard-file-service
+Evaluating project ':services:circleguard-file-service' using build file '/home/toor/git/circleguard/circleguard/services/circleguard-file-service/build.gradle.kts'.
+Resolved plugin [id: 'org.springframework.boot']
+Resolved plugin [id: 'io.spring.dependency-management']
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.spring']
+Applying dependency management to configuration 'annotationProcessor' in project 'circleguard-file-service'
+Applying dependency management to configuration 'api' in project 'circleguard-file-service'
+Applying dependency management to configuration 'apiDependenciesMetadata' in project 'circleguard-file-service'
+Applying dependency management to configuration 'apiElements' in project 'circleguard-file-service'
+Applying dependency management to configuration 'archives' in project 'circleguard-file-service'
+Applying dependency management to configuration 'bootArchives' in project 'circleguard-file-service'
+Applying dependency management to configuration 'compileClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'compileOnly' in project 'circleguard-file-service'
+Applying dependency management to configuration 'compileOnlyDependenciesMetadata' in project 'circleguard-file-service'
+Applying dependency management to configuration 'default' in project 'circleguard-file-service'
+Applying dependency management to configuration 'developmentOnly' in project 'circleguard-file-service'
+Applying dependency management to configuration 'implementation' in project 'circleguard-file-service'
+Applying dependency management to configuration 'implementationDependenciesMetadata' in project 'circleguard-file-service'
+Applying dependency management to configuration 'intransitiveDependenciesMetadata' in project 'circleguard-file-service'
+Applying dependency management to configuration 'kotlinBuildToolsApiClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'kotlinCompilerClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathMain' in project 'circleguard-file-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathTest' in project 'circleguard-file-service'
+Applying dependency management to configuration 'kotlinKlibCommonizerClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'kotlinNativeCompilerPluginClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'kotlinScriptDef' in project 'circleguard-file-service'
+Applying dependency management to configuration 'kotlinScriptDefExtensions' in project 'circleguard-file-service'
+Applying dependency management to configuration 'mainSourceElements' in project 'circleguard-file-service'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'runtimeClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'runtimeElements' in project 'circleguard-file-service'
+Applying dependency management to configuration 'runtimeOnly' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testApi' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testApiDependenciesMetadata' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testCompileClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testCompileOnly' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testCompileOnlyDependenciesMetadata' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testImplementation' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testImplementationDependenciesMetadata' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testIntransitiveDependenciesMetadata' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testKotlinScriptDef' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testKotlinScriptDefExtensions' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'circleguard-file-service'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'circleguard-file-service'
+Applying dependency management to configuration 'apiElements-published' in project 'circleguard-file-service'
+Applying dependency management to configuration 'runtimeElements-published' in project 'circleguard-file-service'
+
+> Configure project :services:circleguard-form-service
+Evaluating project ':services:circleguard-form-service' using build file '/home/toor/git/circleguard/circleguard/services/circleguard-form-service/build.gradle.kts'.
+Resolved plugin [id: 'org.springframework.boot']
+Resolved plugin [id: 'io.spring.dependency-management']
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.spring']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.jpa']
+Applying dependency management to configuration 'annotationProcessor' in project 'circleguard-form-service'
+Applying dependency management to configuration 'api' in project 'circleguard-form-service'
+Applying dependency management to configuration 'apiDependenciesMetadata' in project 'circleguard-form-service'
+Applying dependency management to configuration 'apiElements' in project 'circleguard-form-service'
+Applying dependency management to configuration 'archives' in project 'circleguard-form-service'
+Applying dependency management to configuration 'bootArchives' in project 'circleguard-form-service'
+Applying dependency management to configuration 'compileClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'compileOnly' in project 'circleguard-form-service'
+Applying dependency management to configuration 'compileOnlyDependenciesMetadata' in project 'circleguard-form-service'
+Applying dependency management to configuration 'default' in project 'circleguard-form-service'
+Applying dependency management to configuration 'developmentOnly' in project 'circleguard-form-service'
+Applying dependency management to configuration 'implementation' in project 'circleguard-form-service'
+Applying dependency management to configuration 'implementationDependenciesMetadata' in project 'circleguard-form-service'
+Applying dependency management to configuration 'intransitiveDependenciesMetadata' in project 'circleguard-form-service'
+Applying dependency management to configuration 'kotlinBuildToolsApiClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'kotlinCompilerClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathMain' in project 'circleguard-form-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathTest' in project 'circleguard-form-service'
+Applying dependency management to configuration 'kotlinKlibCommonizerClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'kotlinNativeCompilerPluginClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'kotlinScriptDef' in project 'circleguard-form-service'
+Applying dependency management to configuration 'kotlinScriptDefExtensions' in project 'circleguard-form-service'
+Applying dependency management to configuration 'mainSourceElements' in project 'circleguard-form-service'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'runtimeClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'runtimeElements' in project 'circleguard-form-service'
+Applying dependency management to configuration 'runtimeOnly' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testApi' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testApiDependenciesMetadata' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testCompileClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testCompileOnly' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testCompileOnlyDependenciesMetadata' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testImplementation' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testImplementationDependenciesMetadata' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testIntransitiveDependenciesMetadata' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testKotlinScriptDef' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testKotlinScriptDefExtensions' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'circleguard-form-service'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'circleguard-form-service'
+Applying dependency management to configuration 'apiElements-published' in project 'circleguard-form-service'
+Applying dependency management to configuration 'runtimeElements-published' in project 'circleguard-form-service'
+
+> Configure project :services:circleguard-gateway-service
+Evaluating project ':services:circleguard-gateway-service' using build file '/home/toor/git/circleguard/circleguard/services/circleguard-gateway-service/build.gradle.kts'.
+Resolved plugin [id: 'org.springframework.boot']
+Resolved plugin [id: 'io.spring.dependency-management']
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.spring']
+Applying dependency management to configuration 'annotationProcessor' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'api' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'apiDependenciesMetadata' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'apiElements' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'archives' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'bootArchives' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'compileClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'compileOnly' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'compileOnlyDependenciesMetadata' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'default' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'developmentOnly' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'implementation' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'implementationDependenciesMetadata' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'intransitiveDependenciesMetadata' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'kotlinBuildToolsApiClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'kotlinCompilerClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathMain' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathTest' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'kotlinKlibCommonizerClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'kotlinNativeCompilerPluginClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'kotlinScriptDef' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'kotlinScriptDefExtensions' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'mainSourceElements' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'runtimeClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'runtimeElements' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'runtimeOnly' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testApi' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testApiDependenciesMetadata' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testCompileClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testCompileOnly' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testCompileOnlyDependenciesMetadata' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testImplementation' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testImplementationDependenciesMetadata' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testIntransitiveDependenciesMetadata' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testKotlinScriptDef' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testKotlinScriptDefExtensions' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'apiElements-published' in project 'circleguard-gateway-service'
+Applying dependency management to configuration 'runtimeElements-published' in project 'circleguard-gateway-service'
+
+> Configure project :services:circleguard-identity-service
+Evaluating project ':services:circleguard-identity-service' using build file '/home/toor/git/circleguard/circleguard/services/circleguard-identity-service/build.gradle.kts'.
+Resolved plugin [id: 'org.springframework.boot']
+Resolved plugin [id: 'io.spring.dependency-management']
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.spring']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.jpa']
+Applying dependency management to configuration 'annotationProcessor' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'api' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'apiDependenciesMetadata' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'apiElements' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'archives' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'bootArchives' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'compileClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'compileOnly' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'compileOnlyDependenciesMetadata' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'default' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'developmentOnly' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'implementation' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'implementationDependenciesMetadata' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'intransitiveDependenciesMetadata' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'kotlinBuildToolsApiClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'kotlinCompilerClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathMain' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathTest' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'kotlinKlibCommonizerClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'kotlinNativeCompilerPluginClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'kotlinScriptDef' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'kotlinScriptDefExtensions' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'mainSourceElements' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'runtimeClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'runtimeElements' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'runtimeOnly' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testApi' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testApiDependenciesMetadata' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testCompileClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testCompileOnly' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testCompileOnlyDependenciesMetadata' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testImplementation' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testImplementationDependenciesMetadata' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testIntransitiveDependenciesMetadata' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testKotlinScriptDef' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testKotlinScriptDefExtensions' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'apiElements-published' in project 'circleguard-identity-service'
+Applying dependency management to configuration 'runtimeElements-published' in project 'circleguard-identity-service'
+
+> Configure project :services:circleguard-notification-service
+Evaluating project ':services:circleguard-notification-service' using build file '/home/toor/git/circleguard/circleguard/services/circleguard-notification-service/build.gradle.kts'.
+Resolved plugin [id: 'org.springframework.boot']
+Resolved plugin [id: 'io.spring.dependency-management']
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.spring']
+Applying dependency management to configuration 'annotationProcessor' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'api' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'apiDependenciesMetadata' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'apiElements' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'archives' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'bootArchives' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'compileClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'compileOnly' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'compileOnlyDependenciesMetadata' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'default' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'developmentOnly' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'implementation' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'implementationDependenciesMetadata' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'intransitiveDependenciesMetadata' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'kotlinBuildToolsApiClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'kotlinCompilerClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathMain' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathTest' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'kotlinKlibCommonizerClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'kotlinNativeCompilerPluginClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'kotlinScriptDef' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'kotlinScriptDefExtensions' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'mainSourceElements' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'runtimeClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'runtimeElements' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'runtimeOnly' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testApi' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testApiDependenciesMetadata' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testCompileClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testCompileOnly' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testCompileOnlyDependenciesMetadata' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testImplementation' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testImplementationDependenciesMetadata' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testIntransitiveDependenciesMetadata' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testKotlinScriptDef' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testKotlinScriptDefExtensions' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'apiElements-published' in project 'circleguard-notification-service'
+Applying dependency management to configuration 'runtimeElements-published' in project 'circleguard-notification-service'
+
+> Configure project :services:circleguard-promotion-service
+Evaluating project ':services:circleguard-promotion-service' using build file '/home/toor/git/circleguard/circleguard/services/circleguard-promotion-service/build.gradle.kts'.
+Resolved plugin [id: 'org.springframework.boot']
+Resolved plugin [id: 'io.spring.dependency-management']
+Resolved plugin [id: 'org.jetbrains.kotlin.jvm']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.spring']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.jpa']
+Applying dependency management to configuration 'annotationProcessor' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'api' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'apiDependenciesMetadata' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'apiElements' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'archives' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'bootArchives' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'compileClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'compileOnly' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'compileOnlyDependenciesMetadata' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'default' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'developmentOnly' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'implementation' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'implementationDependenciesMetadata' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'intransitiveDependenciesMetadata' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'kotlinBuildToolsApiClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'kotlinCompilerClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathMain' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'kotlinCompilerPluginClasspathTest' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'kotlinKlibCommonizerClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'kotlinNativeCompilerPluginClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'kotlinScriptDef' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'kotlinScriptDefExtensions' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'mainSourceElements' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'productionRuntimeClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'runtimeClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'runtimeElements' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'runtimeOnly' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testAndDevelopmentOnly' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testAnnotationProcessor' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testApi' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testApiDependenciesMetadata' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testCompileClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testCompileOnly' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testCompileOnlyDependenciesMetadata' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testImplementation' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testImplementationDependenciesMetadata' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testIntransitiveDependenciesMetadata' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testKotlinScriptDef' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testKotlinScriptDefExtensions' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testResultsElementsForTest' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testRuntimeClasspath' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'testRuntimeOnly' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'apiElements-published' in project 'circleguard-promotion-service'
+Applying dependency management to configuration 'runtimeElements-published' in project 'circleguard-promotion-service'
+All projects evaluated.
+Task path ':services:circleguard-dashboard-service:test' matched project ':services:circleguard-dashboard-service'
+Task name matched 'test'
+Selected primary task 'test' from project :services:circleguard-dashboard-service
+Tasks to be executed: [task ':services:circleguard-dashboard-service:checkKotlinGradlePluginConfigurationErrors', task ':services:circleguard-dashboard-service:compileKotlin', task ':services:circleguard-dashboard-service:compileJava', task ':services:circleguard-dashboard-service:processResources', task ':services:circleguard-dashboard-service:classes', task ':services:circleguard-dashboard-service:compileTestKotlin', task ':services:circleguard-dashboard-service:compileTestJava', task ':services:circleguard-dashboard-service:processTestResources', task ':services:circleguard-dashboard-service:testClasses', task ':services:circleguard-dashboard-service:test']
+Tasks that were excluded: []
+Resolve mutations for :services:circleguard-dashboard-service:checkKotlinGradlePluginConfigurationErrors (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:checkKotlinGradlePluginConfigurationErrors (Thread[#1829,Execution worker,5,main]) started.
+
+> Task :services:circleguard-dashboard-service:checkKotlinGradlePluginConfigurationErrors
+Caching disabled for task ':services:circleguard-dashboard-service:checkKotlinGradlePluginConfigurationErrors' because:
+  Build cache is disabled
+Task ':services:circleguard-dashboard-service:checkKotlinGradlePluginConfigurationErrors' is not up-to-date because:
+  Task has not declared any outputs despite executing actions.
+Resolve mutations for :services:circleguard-dashboard-service:compileKotlin (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:compileKotlin (Thread[#1829,Execution worker,5,main]) started.
+
+> Task :services:circleguard-dashboard-service:compileKotlin NO-SOURCE
+Resolving global dependency management for project 'circleguard-dashboard-service'
+Excluding []
+Skipping task ':services:circleguard-dashboard-service:compileKotlin' as it has no source files and no previous output files.
+Resolve mutations for :services:circleguard-dashboard-service:compileJava (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:compileJava (Thread[#1829,Execution worker,5,main]) started.
+
+> Task :services:circleguard-dashboard-service:compileJava UP-TO-DATE
+Excluding []
+Excluding []
+Custom actions are attached to task ':services:circleguard-dashboard-service:compileJava'.
+Caching disabled for task ':services:circleguard-dashboard-service:compileJava' because:
+  Build cache is disabled
+Skipping task ':services:circleguard-dashboard-service:compileJava' as it is up-to-date.
+No compile result for :services:circleguard-dashboard-service:compileJava
+Resolve mutations for :services:circleguard-dashboard-service:processResources (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:processResources (Thread[#1829,Execution worker,5,main]) started.
+
+> Task :services:circleguard-dashboard-service:processResources UP-TO-DATE
+Caching disabled for task ':services:circleguard-dashboard-service:processResources' because:
+  Build cache is disabled
+  Not worth caching
+Skipping task ':services:circleguard-dashboard-service:processResources' as it is up-to-date.
+Resolve mutations for :services:circleguard-dashboard-service:classes (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:classes (Thread[#1829,Execution worker,5,main]) started.
+
+> Task :services:circleguard-dashboard-service:classes UP-TO-DATE
+Skipping task ':services:circleguard-dashboard-service:classes' as it has no actions.
+Resolve mutations for :services:circleguard-dashboard-service:compileTestKotlin (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:compileTestKotlin (Thread[#1829,Execution worker,5,main]) started.
+
+> Task :services:circleguard-dashboard-service:compileTestKotlin NO-SOURCE
+Excluding []
+Skipping task ':services:circleguard-dashboard-service:compileTestKotlin' as it has no source files and no previous output files.
+Resolve mutations for :services:circleguard-dashboard-service:compileTestJava (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:compileTestJava (Thread[#1829,Execution worker,5,main]) started.
+
+> Task :services:circleguard-dashboard-service:compileTestJava UP-TO-DATE
+Excluding []
+Excluding []
+Custom actions are attached to task ':services:circleguard-dashboard-service:compileTestJava'.
+Caching disabled for task ':services:circleguard-dashboard-service:compileTestJava' because:
+  Build cache is disabled
+Skipping task ':services:circleguard-dashboard-service:compileTestJava' as it is up-to-date.
+No compile result for :services:circleguard-dashboard-service:compileTestJava
+Resolve mutations for :services:circleguard-dashboard-service:processTestResources (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:processTestResources (Thread[#1829,Execution worker,5,main]) started.
+
+> Task :services:circleguard-dashboard-service:processTestResources NO-SOURCE
+Skipping task ':services:circleguard-dashboard-service:processTestResources' as it has no source files and no previous output files.
+Resolve mutations for :services:circleguard-dashboard-service:testClasses (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:testClasses (Thread[#1829,Execution worker,5,main]) started.
+
+> Task :services:circleguard-dashboard-service:testClasses UP-TO-DATE
+Skipping task ':services:circleguard-dashboard-service:testClasses' as it has no actions.
+Resolve mutations for :services:circleguard-dashboard-service:test (Thread[#1829,Execution worker,5,main]) started.
+:services:circleguard-dashboard-service:test (Thread[#1829,Execution worker,5,main]) started.
+Gradle Test Executor 12 started executing tests.
+Gradle Test Executor 12 finished executing tests.
+
+> Task :services:circleguard-dashboard-service:test FAILED
+Excluding []
+Caching disabled for task ':services:circleguard-dashboard-service:test' because:
+  Build cache is disabled
+Task ':services:circleguard-dashboard-service:test' is not up-to-date because:
+  Task has failed previously.
+file or directory '/home/toor/git/circleguard/circleguard/services/circleguard-dashboard-service/build/classes/kotlin/test', not found
+Starting process 'Gradle Test Executor 12'. Working directory: /home/toor/git/circleguard/circleguard/services/circleguard-dashboard-service Command: /usr/lib/jvm/java-21-openjdk-arm64/bin/java -Dorg.gradle.internal.worker.tmpdir=/home/toor/git/circleguard/circleguard/services/circleguard-dashboard-service/build/tmp/test/work @/home/toor/.gradle/.tmp/gradle-worker-classpath14250027711216617569txt -Xmx512m -Dfile.encoding=UTF-8 -Duser.country -Duser.language=en -Duser.variant -ea worker.org.gradle.process.internal.worker.GradleWorkerMain 'Gradle Test Executor 12'
+Successfully started process 'Gradle Test Executor 12'
+
+AnalyticsControllerTest STANDARD_OUT
+    23:07:25.448 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.circleguard.dashboard.controller.AnalyticsControllerTest]: AnalyticsControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+
+AnalyticsControllerTest > initializationError FAILED
+    java.lang.IllegalStateException: Unable to find a @SpringBootConfiguration, you need to use @ContextConfiguration or @SpringBootTest(classes=...) with your test
+        at org.springframework.util.Assert.state(Assert.java:76)
+        at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.findConfigurationClass(SpringBootTestContextBootstrapper.java:246)
+        at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.getOrFindConfigurationClasses(SpringBootTestContextBootstrapper.java:233)
+        at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.processMergedContextConfiguration(SpringBootTestContextBootstrapper.java:150)
+        at org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTestContextBootstrapper.processMergedContextConfiguration(WebMvcTestContextBootstrapper.java:36)
+        at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:351)
+        at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildDefaultMergedContextConfiguration(AbstractTestContextBootstrapper.java:267)
+        at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildMergedContextConfiguration(AbstractTestContextBootstrapper.java:215)
+        at org.springframework.test.context.support.AbstractTestContextBootstrapper.buildTestContext(AbstractTestContextBootstrapper.java:108)
+        at org.springframework.boot.test.context.SpringBootTestContextBootstrapper.buildTestContext(SpringBootTestContextBootstrapper.java:111)
+        at org.springframework.test.context.TestContextManager.<init>(TestContextManager.java:142)
+        at org.springframework.test.context.TestContextManager.<init>(TestContextManager.java:126)
+        at org.junit.platform.engine.support.store.NamespacedHierarchicalStore.lambda$getOrComputeIfAbsent$5(NamespacedHierarchicalStore.java:147)
+        at org.junit.platform.engine.support.store.NamespacedHierarchicalStore$MemoizingSupplier.computeValue(NamespacedHierarchicalStore.java:372)
+        at org.junit.platform.engine.support.store.NamespacedHierarchicalStore$MemoizingSupplier.get(NamespacedHierarchicalStore.java:361)
+        at org.junit.platform.engine.support.store.NamespacedHierarchicalStore$StoredValue.evaluate(NamespacedHierarchicalStore.java:308)
+        at org.junit.platform.engine.support.store.NamespacedHierarchicalStore$StoredValue.access$200(NamespacedHierarchicalStore.java:287)
+        at org.junit.platform.engine.support.store.NamespacedHierarchicalStore.getOrComputeIfAbsent(NamespacedHierarchicalStore.java:149)
+        at org.junit.platform.engine.support.store.NamespacedHierarchicalStore.getOrComputeIfAbsent(NamespacedHierarchicalStore.java:168)
+        at org.junit.jupiter.engine.execution.NamespaceAwareStore.lambda$getOrComputeIfAbsent$3(NamespaceAwareStore.java:66)
+        at org.junit.jupiter.engine.execution.NamespaceAwareStore.accessStore(NamespaceAwareStore.java:90)
+        at org.junit.jupiter.engine.execution.NamespaceAwareStore.getOrComputeIfAbsent(NamespaceAwareStore.java:65)
+        at org.springframework.test.context.junit.jupiter.SpringExtension.getTestContextManager(SpringExtension.java:366)
+        at org.springframework.test.context.junit.jupiter.SpringExtension.beforeAll(SpringExtension.java:131)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.lambda$invokeBeforeAllCallbacks$12(ClassBasedTestDescriptor.java:396)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.invokeBeforeAllCallbacks(ClassBasedTestDescriptor.java:396)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:212)
+        at org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor.before(ClassBasedTestDescriptor.java:85)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:148)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+        at java.base/java.util.ArrayList.forEach(ArrayList.java:1596)
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+        at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+        at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+        at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+        at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+        at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:107)
+        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:88)
+        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:54)
+        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:67)
+        at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:52)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:114)
+        at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:86)
+        at org.junit.platform.launcher.core.DefaultLauncherSession$DelegatingLauncher.execute(DefaultLauncherSession.java:86)
+        at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.processAllTestClasses(JUnitPlatformTestClassProcessor.java:124)
+        at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor$CollectAllTestClassesExecutor.access$000(JUnitPlatformTestClassProcessor.java:99)
+        at org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestClassProcessor.stop(JUnitPlatformTestClassProcessor.java:94)
+        at org.gradle.api.internal.tasks.testing.SuiteTestClassProcessor.stop(SuiteTestClassProcessor.java:63)
+        at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+        at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:36)
+        at org.gradle.internal.dispatch.ReflectionDispatch.dispatch(ReflectionDispatch.java:24)
+        at org.gradle.internal.dispatch.ContextClassLoaderDispatch.dispatch(ContextClassLoaderDispatch.java:33)
+        at org.gradle.internal.dispatch.ProxyDispatchAdapter$DispatchingInvocationHandler.invoke(ProxyDispatchAdapter.java:92)
+        at jdk.proxy1/jdk.proxy1.$Proxy4.stop(Unknown Source)
+        at org.gradle.api.internal.tasks.testing.worker.TestWorker$3.run(TestWorker.java:200)
+        at org.gradle.api.internal.tasks.testing.worker.TestWorker.executeAndMaintainThreadName(TestWorker.java:132)
+        at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:103)
+        at org.gradle.api.internal.tasks.testing.worker.TestWorker.execute(TestWorker.java:63)
+        at org.gradle.process.internal.worker.child.ActionExecutionWorker.execute(ActionExecutionWorker.java:56)
+        at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:122)
+        at org.gradle.process.internal.worker.child.SystemApplicationClassLoaderWorker.call(SystemApplicationClassLoaderWorker.java:72)
+        at worker.org.gradle.process.internal.worker.GradleWorkerMain.run(GradleWorkerMain.java:69)
+        at worker.org.gradle.process.internal.worker.GradleWorkerMain.main(GradleWorkerMain.java:74)
+
+1 test completed, 1 failed
+Finished generating test XML results (0.0 secs) into: /home/toor/git/circleguard/circleguard/services/circleguard-dashboard-service/build/test-results/test
+Generating HTML test report...
+Finished generating test html results (0.005 secs) into: /home/toor/git/circleguard/circleguard/services/circleguard-dashboard-service/build/reports/tests/test
+
+[Incubating] Problems report is available at: file:///home/toor/git/circleguard/circleguard/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':services:circleguard-dashboard-service:test'.
+> There were failing tests. See the report at: file:///home/toor/git/circleguard/circleguard/services/circleguard-dashboard-service/build/reports/tests/test/index.html
+
+* Try:
+> Run with --scan to get full insights.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.14/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 1s
+5 actionable tasks: 2 executed, 3 up-to-date

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CircleGuard Visual Foundation Visualizer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .outfit { font-family: 'Outfit', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 p-8">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-12 border-b pb-6">
+            <h1 class="text-4xl font-bold outfit mb-2">CircleGuard Visual Foundation</h1>
+            <p class="text-lg text-gray-600">Exploring color themes, typography, and UI patterns for the campus safety ecosystem.</p>
+        </header>
+
+        <!-- Color Themes Section -->
+        <section class="mb-16">
+            <h2 class="text-2xl font-semibold mb-8 border-l-4 border-blue-600 pl-4 uppercase tracking-wider text-sm">Color Theme Options</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Theme 1: Campus Guardian -->
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+                    <div class="h-4 pr-1 flex">
+                        <div class="w-1/3 h-full" style="background-color: #1E1B4B;"></div>
+                        <div class="w-1/3 h-full" style="background-color: #D97706;"></div>
+                        <div class="w-1/3 h-full" style="background-color: #475569;"></div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">Campus Guardian</h3>
+                        <p class="text-sm text-gray-600 mb-6">Authoritative, Trustworthy, and Traditional. Best for academic institutions with deep historical roots.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                                <span class="text-sm font-medium">Primary</span>
+                                <div class="w-12 h-6 rounded border" style="background-color: #1E1B4B;"></div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                                <span class="text-sm font-medium">Accent</span>
+                                <div class="w-12 h-6 rounded border" style="background-color: #D97706;"></div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                                <span class="text-sm font-medium">Neutral</span>
+                                <div class="w-12 h-6 rounded border" style="background-color: #475569;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theme 2: Health Calm -->
+                <div class="bg-white rounded-2xl shadow-xl overflow-hidden group hover:scale-[1.02] transition-transform duration-300 border-2 border-blue-500">
+                    <div class="h-4 pr-1 flex">
+                        <div class="w-1/3 h-full" style="background-color: #0F766E;"></div>
+                        <div class="w-1/3 h-full" style="background-color: #CA8A04;"></div>
+                        <div class="w-1/3 h-full" style="background-color: #94A3B8;"></div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="text-xl font-bold">Health Calm</h3>
+                            <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">Recommended</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-6">Clean, Modern, and Empathic. Uses "Soft Hazard" ambers to reduce anxiety while maintaining authority.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                                <span class="text-sm font-medium">Primary</span>
+                                <div class="w-12 h-6 rounded border" style="background-color: #0F766E;"></div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                                <span class="text-sm font-medium">Accent</span>
+                                <div class="w-12 h-6 rounded border" style="background-color: #CA8A04;"></div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-gray-100 bg-gray-50">
+                                <span class="text-sm font-medium">Neutral</span>
+                                <div class="w-12 h-6 rounded border" style="background-color: #94A3B8;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Theme 3: Stealth Privacy -->
+                <div class="bg-zinc-900 text-zinc-100 rounded-2xl shadow-xl overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+                    <div class="h-4 pr-1 flex">
+                        <div class="w-1/3 h-full" style="background-color: #0891B2;"></div>
+                        <div class="w-1/3 h-full" style="background-color: #EA580C;"></div>
+                        <div class="w-1/3 h-full" style="background-color: #18181B;"></div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">Stealth Privacy</h3>
+                        <p class="text-sm text-zinc-400 mb-6">Technical, High-Security, and Resilient. Designed for a privacy-first, tech-forward campus experience.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-zinc-800 bg-zinc-800/50">
+                                <span class="text-sm font-medium">Primary</span>
+                                <div class="w-12 h-6 rounded border border-zinc-700" style="background-color: #0891B2;"></div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-zinc-800 bg-zinc-800/50">
+                                <span class="text-sm font-medium">Accent</span>
+                                <div class="w-12 h-6 rounded border border-zinc-700" style="background-color: #EA580C;"></div>
+                            </div>
+                            <div class="flex items-center justify-between p-3 rounded-lg border border-zinc-800 bg-zinc-800/50">
+                                <span class="text-sm font-medium">Neutral</span>
+                                <div class="w-12 h-6 rounded border border-zinc-700" style="background-color: #18181B;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Typography & Layout Section -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
+            <!-- Typography -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-6 border-l-4 border-blue-600 pl-4 uppercase tracking-wider text-sm">Typography System</h2>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="mb-8">
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">Display Font: Outfit</p>
+                        <h1 class="text-4xl font-bold outfit text-[#0F766E] leading-tight">University Health Safety</h1>
+                        <p class="text-sm text-gray-500 mt-2">Used for headings, brand elements, and status titles.</p>
+                    </div>
+                    <div class="mb-8 border-t pt-8">
+                        <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-2">Body Font: Inter</p>
+                        <p class="text-lg leading-relaxed text-gray-700 mb-4">
+                            The defining interaction of CircleGuard is the Frictionless Status Check-in. Our typography ensures clarity and calm in high-stress situations.
+                        </p>
+                        <p class="text-sm leading-relaxed text-gray-500">
+                            Available in Light, Regular, Medium, and Semibold for a robust hierarchy.
+                        </p>
+                    </div>
+                    <div class="flex gap-4">
+                        <span class="px-3 py-1 bg-[#0F766E] text-white text-xs font-semibold rounded">H1 / 36px</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded">Body / 16px</span>
+                        <span class="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded">Caption / 12px</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interactivity & Feedback -->
+            <div>
+                <h2 class="text-2xl font-semibold mb-6 border-l-4 border-blue-600 pl-4 uppercase tracking-wider text-sm">Functional Visuals</h2>
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 space-y-8">
+                    <!-- Status Examples -->
+                    <div class="flex gap-4">
+                        <div class="flex-1 bg-green-50 border border-green-200 p-4 rounded-xl text-center">
+                            <div class="w-10 h-10 bg-green-500 rounded-full mx-auto mb-2 flex items-center justify-center text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold text-green-700 uppercase">Active</span>
+                        </div>
+                        <div class="flex-1 bg-amber-50 border border-amber-200 p-4 rounded-xl text-center">
+                            <div class="w-10 h-10 bg-amber-500 rounded-full mx-auto mb-2 flex items-center justify-center text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold text-amber-700 uppercase">Fenced</span>
+                        </div>
+                        <div class="flex-1 bg-gray-50 border border-gray-200 p-4 rounded-xl text-center opacity-50">
+                            <div class="w-10 h-10 bg-gray-400 rounded-full mx-auto mb-2 flex items-center justify-center text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                </svg>
+                            </div>
+                            <span class="text-xs font-bold text-gray-700 uppercase">Syncing</span>
+                        </div>
+                    </div>
+
+                    <!-- Layout Preview -->
+                    <div class="bg-gray-50 p-6 rounded-xl border border-dashed border-gray-300">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                            <div class="space-y-2 flex-1">
+                                <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+                                <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                            </div>
+                        </div>
+                        <div class="h-24 bg-white rounded-lg border border-gray-100 flex items-center justify-center text-[10px] text-gray-300 font-bold uppercase tracking-widest">
+                            8px Spacing Grid applied
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="text-center text-gray-400 text-sm mt-12 pb-12">
+            Built as part of the CircleGuard UX Design Workflow (Step 8)
+        </footer>
+    </div>
+</body>
+</html>

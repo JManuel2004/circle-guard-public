@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: circleguard-dashboard-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/circleguard_dashboard
+    username: admin
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+server:
+  port: 8084

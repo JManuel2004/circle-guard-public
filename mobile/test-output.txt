@@ -1,0 +1,45 @@
+
+> mobile@1.0.0 test
+> jest
+
+FAIL hooks/useQrToken.test.ts
+  ● Test suite failed to run
+
+    [BABEL] /home/toor/git/circleguard/circleguard/mobile/node_modules/react-native/jest/react-native-env.js: .plugins is not a valid Plugin property
+
+      at node_modules/@babel/core/lib/config/validation/plugins.js:58:42
+          at Array.forEach (<anonymous>)
+      at validatePluginObject (node_modules/@babel/core/lib/config/validation/plugins.js:48:20)
+      at node_modules/@babel/core/lib/config/full.js:222:55
+      at Function.<anonymous> (node_modules/@babel/core/lib/gensync-utils/async.js:21:3)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at Function.sync (node_modules/gensync/index.js:89:14)
+      at sync (node_modules/@babel/core/lib/gensync-utils/async.js:61:25)
+      at sync (node_modules/gensync/index.js:182:19)
+      at onFirstPause (node_modules/gensync/index.js:210:24)
+      at cachedFunction (node_modules/@babel/core/lib/config/caching.js:52:46)
+          at cachedFunction.next (<anonymous>)
+      at loadPluginDescriptor (node_modules/@babel/core/lib/config/full.js:259:17)
+          at loadPluginDescriptor.next (<anonymous>)
+      at loadPluginDescriptors (node_modules/@babel/core/lib/config/full.js:129:33)
+          at loadPluginDescriptors.next (<anonymous>)
+      at node_modules/@babel/core/lib/config/full.js:156:21
+      at loadFullConfig (node_modules/@babel/core/lib/config/full.js:141:5)
+          at loadFullConfig.next (<anonymous>)
+      at transform (node_modules/@babel/core/lib/transform.js:20:44)
+          at transform.next (<anonymous>)
+      at evaluateSync (node_modules/gensync/index.js:251:28)
+      at sync (node_modules/gensync/index.js:89:14)
+      at stopHiding - secret - don't use this - v1 (node_modules/@babel/core/lib/errors/rewrite-stack-trace.js:47:12)
+      at transformSync (node_modules/@babel/core/lib/transform.js:40:76)
+      at ScriptTransformer.transformSource (node_modules/@jest/transform/build/ScriptTransformer.js:545:31)
+      at revertHook.exts (node_modules/@jest/transform/build/ScriptTransformer.js:776:18)
+      at Module._compile (node_modules/pirates/lib/index.js:124:29)
+      at Object.newLoader (node_modules/pirates/lib/index.js:134:7)
+      at ScriptTransformer.requireAndTranspileModule (node_modules/@jest/transform/build/ScriptTransformer.js:798:66)
+
+Test Suites: 1 failed, 1 total
+Tests:       0 total
+Snapshots:   0 total
+Time:        0.132 s
+Ran all test suites.

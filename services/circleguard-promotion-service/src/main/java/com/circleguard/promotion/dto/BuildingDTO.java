@@ -1,0 +1,23 @@
+package com.circleguard.promotion.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.util.List;
+import java.util.UUID;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class BuildingDTO {
+    private UUID id;
+    private String name;
+    private String code;
+    private String description;
+    private Double latitude;
+    private Double longitude;
+    private String address;
+    private List<FloorDTO> floors;
+}

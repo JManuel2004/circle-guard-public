@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: circleguard-auth-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/circleguard_auth
+    username: admin
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  ldap:
+    urls: ldap://localhost:389
+    base: dc=circleguard,dc=edu
+    username: cn=admin,dc=circleguard,dc=edu
+    password: admin
+
+jwt:
+  secret: "my-super-secret-dev-key-32-chars-long-12345678"
+  expiration: 3600000
+
+qr:
+  secret: "my-qr-secret-key-for-dev-1234567890"
+  expiration: 300
+
+server:
+  port: 8180
