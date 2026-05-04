@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-file-service
+  labels:
+    app: circleguard-file-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-file-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-file-service
+    spec:
+      containers:
+        - name: circleguard-file-service
+          image: circleguard-file-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8085
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+      volumes:
+        - name: uploads
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-file-service
+spec:
+  type: ClusterIP
+  selector:
+    app: circleguard-file-service
+  ports:
+    - port: 8085
+      targetPort: 8085

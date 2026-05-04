@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-notification-service
+  labels:
+    app: circleguard-notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-notification-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-notification-service
+    spec:
+      containers:
+        - name: circleguard-notification-service
+          image: circleguard-notification-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: SPRING_KAFKA_CONSUMER_GROUP_ID
+              value: "notification-group"
+            - name: SPRING_MAIL_HOST
+              value: "mailhog"
+            - name: SPRING_MAIL_PORT
+              value: "25"
+            - name: AUTH_API_URL
+              value: "http://circleguard-auth-service:8180"
+            - name: JWT_SECRET
+              value: "my-super-secret-dev-key-32-chars-long-12345678"
+            - name: JWT_EXPIRATION
+              value: "3600000"
+            - name: QR_SECRET
+              value: "my-qr-secret-key-for-dev-1234567890"
+            - name: QR_EXPIRATION
+              value: "300"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-notification-service
+spec:
+  type: ClusterIP
+  selector:
+    app: circleguard-notification-service
+  ports:
+    - port: 8082
+      targetPort: 8082

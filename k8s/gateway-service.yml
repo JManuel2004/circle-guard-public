@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-gateway-service
+  labels:
+    app: circleguard-gateway-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-gateway-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-gateway-service
+    spec:
+      containers:
+        - name: circleguard-gateway-service
+          image: circleguard-gateway-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8087
+          env:
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: JWT_SECRET
+              value: "my-super-secret-dev-key-32-chars-long-12345678"
+            - name: JWT_EXPIRATION
+              value: "3600000"
+            - name: QR_SECRET
+              value: "my-qr-secret-key-for-dev-1234567890"
+            - name: QR_EXPIRATION
+              value: "300"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-gateway-service
+spec:
+  type: ClusterIP
+  selector:
+    app: circleguard-gateway-service
+  ports:
+    - port: 8087
+      targetPort: 8087

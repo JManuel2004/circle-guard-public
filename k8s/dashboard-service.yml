@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-dashboard-service
+  labels:
+    app: circleguard-dashboard-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-dashboard-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-dashboard-service
+    spec:
+      containers:
+        - name: circleguard-dashboard-service
+          image: circleguard-dashboard-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8084
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/circleguard_dashboard"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "admin"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "password"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-dashboard-service
+spec:
+  type: ClusterIP
+  selector:
+    app: circleguard-dashboard-service
+  ports:
+    - port: 8084
+      targetPort: 8084

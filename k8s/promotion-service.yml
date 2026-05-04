@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-promotion-service
+  labels:
+    app: circleguard-promotion-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-promotion-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-promotion-service
+    spec:
+      containers:
+        - name: circleguard-promotion-service
+          image: circleguard-promotion-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8088
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/circleguard_promotion"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "admin"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "password"
+            - name: SPRING_NEO4J_URI
+              value: "bolt://neo4j:7687"
+            - name: SPRING_NEO4J_AUTHENTICATION_USERNAME
+              value: "neo4j"
+            - name: SPRING_NEO4J_AUTHENTICATION_PASSWORD
+              value: "password"
+            - name: SPRING_DATA_REDIS_HOST
+              value: "redis"
+            - name: SPRING_DATA_REDIS_PORT
+              value: "6379"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: SPRING_KAFKA_CONSUMER_GROUP_ID
+              value: "promotion-service-group"
+            - name: JWT_SECRET
+              value: "my-super-secret-dev-key-32-chars-long-12345678"
+            - name: JWT_EXPIRATION
+              value: "3600000"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-promotion-service
+spec:
+  type: ClusterIP
+  selector:
+    app: circleguard-promotion-service
+  ports:
+    - port: 8088
+      targetPort: 8088

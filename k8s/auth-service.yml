@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-auth-service
+  labels:
+    app: circleguard-auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-auth-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-auth-service
+    spec:
+      containers:
+        - name: circleguard-auth-service
+          image: circleguard-auth-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8180
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/circleguard_auth"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "admin"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "password"
+            - name: SPRING_LDAP_URLS
+              value: "ldap://openldap:389"
+            - name: SPRING_LDAP_BASE
+              value: "dc=circleguard,dc=edu"
+            - name: SPRING_LDAP_USERNAME
+              value: "cn=admin,dc=circleguard,dc=edu"
+            - name: SPRING_LDAP_PASSWORD
+              value: "admin"
+            - name: JWT_SECRET
+              value: "my-super-secret-dev-key-32-chars-long-12345678"
+            - name: JWT_EXPIRATION
+              value: "3600000"
+            - name: QR_SECRET
+              value: "my-qr-secret-key-for-dev-1234567890"
+            - name: QR_EXPIRATION
+              value: "300"
+            - name: SERVICES_IDENTITY_URL
+              value: "http://circleguard-identity-service:8083"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-auth-service
+spec:
+  type: ClusterIP
+  selector:
+    app: circleguard-auth-service
+  ports:
+    - port: 8180
+      targetPort: 8180

@@ -1,6 +1,10 @@
-ALTER TABLE system_settings 
-ADD COLUMN mandatory_fence_days INTEGER NOT NULL DEFAULT 14,
-ADD COLUMN encounter_window_days INTEGER NOT NULL DEFAULT 14;
+CREATE TABLE system_settings (
+    id BIGSERIAL PRIMARY KEY,
+    unconfirmed_fencing_enabled BOOLEAN NOT NULL DEFAULT false,
+    auto_threshold_seconds BIGINT NOT NULL DEFAULT 300,
+    mandatory_fence_days INTEGER NOT NULL DEFAULT 14,
+    encounter_window_days INTEGER NOT NULL DEFAULT 14
+);
 
--- Seed initial values if not present
-UPDATE system_settings SET mandatory_fence_days = 14, encounter_window_days = 14 WHERE mandatory_fence_days IS NULL;
+INSERT INTO system_settings (unconfirmed_fencing_enabled, auto_threshold_seconds, mandatory_fence_days, encounter_window_days)
+VALUES (false, 300, 14, 14);

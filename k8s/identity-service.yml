@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: circleguard-identity-service
+  labels:
+    app: circleguard-identity-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: circleguard-identity-service
+  template:
+    metadata:
+      labels:
+        app: circleguard-identity-service
+    spec:
+      containers:
+        - name: circleguard-identity-service
+          image: circleguard-identity-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://postgres:5432/circleguard_identity"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: "admin"
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "password"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka:9092"
+            - name: VAULT_SECRET
+              value: "746573742d7365637265742d33322d63686172732d6c6f6e672d313233343536"
+            - name: VAULT_SALT
+              value: "deadbeef"
+            - name: VAULT_HASH_SALT
+              value: "12345678"
+            - name: JWT_SECRET
+              value: "my-super-secret-dev-key-32-chars-long-12345678"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: circleguard-identity-service
+spec:
+  type: ClusterIP
+  selector:
+    app: circleguard-identity-service
+  ports:
+    - port: 8083
+      targetPort: 8083

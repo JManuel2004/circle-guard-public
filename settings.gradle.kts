@@ -17,6 +17,8 @@ rootProject.name = "circleguard"
 // include("libs:circleguard-events")
 
 // Microservices
+include("e2e-tests")
+
 include("services:circleguard-auth-service")
 include("services:circleguard-identity-service")
 include("services:circleguard-promotion-service")
