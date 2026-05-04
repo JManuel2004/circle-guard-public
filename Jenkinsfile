@@ -190,7 +190,7 @@ pipeline {
         // ─────────────────────────────────────────────────────────────────────
         stage('Integration Tests') {
             when {
-                anyOf { branch 'stage'; branch 'master' }
+                anyOf { branch 'stage'; branch 'main' }
             }
             steps {
                 sh """

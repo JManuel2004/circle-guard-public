@@ -4,6 +4,7 @@ import com.circleguard.e2e.config.ServiceUrls;
 import com.circleguard.e2e.support.AuthHelper;
 import com.circleguard.e2e.support.AuthHelper.LoginResult;
 import io.restassured.response.Response;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   c) After joining, the circle appears in the user's circle list.
  */
 @Tag("e2e")
+@Disabled("Temporarily disabled: depends on promotion-service which is scaled to 0 replicas")
 @DisplayName("E2E Flow 4 – Circle lifecycle (auth → promotion)")
 class CircleLifecycleE2E {
 

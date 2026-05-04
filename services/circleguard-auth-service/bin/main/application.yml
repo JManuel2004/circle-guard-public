@@ -26,5 +26,9 @@ qr:
   secret: "my-qr-secret-key-for-dev-1234567890"
   expiration: 300
 
+services:
+  identity:
+    url: http://localhost:8083
+
 server:
   port: 8180
