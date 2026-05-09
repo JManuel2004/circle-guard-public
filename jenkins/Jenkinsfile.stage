@@ -517,6 +517,7 @@ pipeline {
         always {
             // Remove pods stuck in Failed phase so the next run starts clean
             sh 'kubectl delete pods --field-selector=status.phase=Failed -n circleguard-stage || true'
+            sh 'kubectl delete namespace circleguard-stage --ignore-not-found=true || true'
             cleanWs()
         }
     }

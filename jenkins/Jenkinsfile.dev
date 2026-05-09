@@ -351,6 +351,7 @@ pipeline {
             }
         }
         always {
+            sh 'kubectl delete namespace circleguard-dev --ignore-not-found=true || true'
             cleanWs()
         }
     }

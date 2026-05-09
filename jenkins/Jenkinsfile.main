@@ -727,6 +727,7 @@ All changes in this release passed:
         }
         always {
             sh 'kubectl delete pods --field-selector=status.phase=Failed -n circleguard-stage || true'
+            sh 'kubectl delete namespace circleguard-prod --ignore-not-found=true || true'
             cleanWs()
         }
     }
