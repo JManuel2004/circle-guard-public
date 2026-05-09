@@ -326,6 +326,10 @@ pipeline {
                     ]) {
                         script {
                             sh """
+                                ${KUBECTL} logs deployment/circleguard-auth-service -n ${K8S_NS_STAGE} --tail=50 | grep -i "flyway\\|migration\\|staff_guard\\|seed\\|error\\|started" || true
+                            """
+
+                            sh """
                                 ${KUBECTL} port-forward svc/circleguard-auth-service      19180:8180 -n ${K8S_NS_STAGE} &
                                 echo \$! > /tmp/pf_e2e_auth.pid
                                 ${KUBECTL} port-forward svc/circleguard-identity-service  19083:8083 -n ${K8S_NS_STAGE} &
