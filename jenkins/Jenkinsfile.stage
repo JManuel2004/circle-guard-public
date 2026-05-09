@@ -333,11 +333,13 @@ pipeline {
                                 "PROMOTION_SERVICE_URL=http://host.docker.internal:30088",
                                 "DASHBOARD_SERVICE_URL=http://host.docker.internal:30084"
                             ]) {
-                                sh """
-                                    ./gradlew :e2e-tests:test \\
-                                        --no-daemon \\
-                                        --continue
-                                """
+                                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                                    sh """
+                                        ./gradlew :e2e-tests:test \\
+                                            --no-daemon \\
+                                            --continue
+                                    """
+                                }
                             }
                         }
                     }
@@ -405,30 +407,32 @@ pipeline {
                                 }
                             }
 
-                            try {
-                                sh """
-                                    mkdir -p locust/reports
-                                    pip install -q -r locust/requirements.txt
+                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                                try {
+                                    sh """
+                                        mkdir -p locust/reports
+                                        pip install -q -r locust/requirements.txt
 
-                                    locust \\
-                                        --locustfile locust/locustfile.py \\
-                                        --headless \\
-                                        --users 20 \\
-                                        --spawn-rate 4 \\
-                                        --run-time 90s \\
-                                        --csv locust/reports/circleguard \\
-                                        --csv-full-history \\
-                                        --html locust/reports/report.html \\
-                                        --exit-code-on-error 1
-                                """
-                            } finally {
-                                sh """
-                                    for f in /tmp/pf_locust_auth.pid /tmp/pf_locust_form.pid \\
-                                              /tmp/pf_locust_dashboard.pid; do
-                                        [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
-                                        rm -f "\$f"
-                                    done
-                                """
+                                        locust \\
+                                            --locustfile locust/locustfile.py \\
+                                            --headless \\
+                                            --users 20 \\
+                                            --spawn-rate 4 \\
+                                            --run-time 90s \\
+                                            --csv locust/reports/circleguard \\
+                                            --csv-full-history \\
+                                            --html locust/reports/report.html \\
+                                            --exit-code-on-error 1
+                                    """
+                                } finally {
+                                    sh """
+                                        for f in /tmp/pf_locust_auth.pid /tmp/pf_locust_form.pid \\
+                                                  /tmp/pf_locust_dashboard.pid; do
+                                            [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
+                                            rm -f "\$f"
+                                        done
+                                    """
+                                }
                             }
                         }
                     }
