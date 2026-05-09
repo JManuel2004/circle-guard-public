@@ -313,37 +313,29 @@ pipeline {
         }
 
         stage('E2E Tests') {
-            agent any
+            agent { label 'windows-host' }
             steps {
-                withKubeConfig([credentialsId: 'kubeconfig-file', serverUrl: 'https://kubernetes.docker.internal:6443']) {
-                    withCredentials([
-                        usernamePassword(credentialsId: 'e2e-user-credentials', usernameVariable: 'E2E_USER', passwordVariable: 'E2E_PASS'),
-                        usernamePassword(credentialsId: 'e2e-admin-credentials', usernameVariable: 'E2E_ADMIN_USER', passwordVariable: 'E2E_ADMIN_PASS')
+                withCredentials([
+                    usernamePassword(credentialsId: 'e2e-user-credentials', usernameVariable: 'E2E_USER', passwordVariable: 'E2E_PASS'),
+                    usernamePassword(credentialsId: 'e2e-admin-credentials', usernameVariable: 'E2E_ADMIN_USER', passwordVariable: 'E2E_ADMIN_PASS')
+                ]) {
+                    withEnv([
+                        "AUTH_SERVICE_URL=http://localhost:30180",
+                        "IDENTITY_SERVICE_URL=http://localhost:30083",
+                        "FORM_SERVICE_URL=http://localhost:30086",
+                        "PROMOTION_SERVICE_URL=http://localhost:30088",
+                        "DASHBOARD_SERVICE_URL=http://localhost:30084"
                     ]) {
-                        withEnv([
-                            "AUTH_SERVICE_URL=http://host.docker.internal:30180",
-                            "IDENTITY_SERVICE_URL=http://host.docker.internal:30083",
-                            "FORM_SERVICE_URL=http://host.docker.internal:30086",
-                            "PROMOTION_SERVICE_URL=http://host.docker.internal:30088",
-                            "DASHBOARD_SERVICE_URL=http://host.docker.internal:30084",
-                            "E2E_USER=${E2E_USER}",
-                            "E2E_ADMIN_USER=${E2E_ADMIN_USER}"
-                        ]) {
-                            sh """
-                                echo "Testing connectivity to auth-service..."
-                                curl -s -o /dev/null -w "Auth service HTTP status: %{http_code}\\n" http://host.docker.internal:30180/api/v1/auth/login -X POST -H "Content-Type: application/json" -d '{"username":"staff_guard","password":"password"}' || true
-                                echo "Running E2E tests..."
-                                ./gradlew :e2e-tests:test --no-daemon --continue
-                            """
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            bat "gradlew.bat :e2e-tests:test --no-daemon --continue"
                         }
                     }
                 }
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: 'e2e-tests/build/test-results/test/*.xml'
+                    junit allowEmptyResults: true, testResults: 'e2e-tests\\build\\test-results\\test\\*.xml'
                 }
-                failure { echo 'Stage E2E Tests failed' }
             }
         }
 
