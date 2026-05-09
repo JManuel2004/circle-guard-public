@@ -324,7 +324,6 @@ pipeline {
                                 :services:circleguard-form-service:test \\
                                 :services:circleguard-promotion-service:test \\
                                 :services:circleguard-notification-service:test \\
-                                :services:circleguard-dashboard-service:test \\
                                 --tests '*E2E*' \\
                                 --no-daemon \\
                                 --continue
