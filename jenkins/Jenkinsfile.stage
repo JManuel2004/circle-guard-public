@@ -39,8 +39,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_BUILDKIT = '1'
-        IMAGE_PREFIX    = 'circleguard'
+        DOCKER_BUILDKIT               = '1'
+        TESTCONTAINERS_RYUK_DISABLED  = 'true'
+        IMAGE_PREFIX                  = 'circleguard'
         IMAGE_TAG       = "${BUILD_NUMBER}"
         K8S_NS_STAGE    = 'circleguard-stage'
         KUBECONFIG      = credentials('kubeconfig-file')

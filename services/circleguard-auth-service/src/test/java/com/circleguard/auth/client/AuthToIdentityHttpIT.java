@@ -31,7 +31,7 @@ class AuthToIdentityHttpIT {
 
     @BeforeEach
     void setUp() {
-        client = new IdentityClient();
+        client = new IdentityClient("http://localhost:" + identityServiceMock.getPort());
     }
 
     @Test
