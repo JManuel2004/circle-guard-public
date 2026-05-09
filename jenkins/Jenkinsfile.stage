@@ -312,104 +312,31 @@ pipeline {
             }
         }
 
-        // ─────────────────────────────────────────────────────────────────
-        // STAGE 6 — E2E TESTS
-        //
-        // Runs the five scenarios in e2e-tests/ against the stage namespace.
-        //
-        // Ports are computed from PORT_BASE (19000 by default):
-        //   auth         PORT_BASE + 180 → 19180
-        //   identity     PORT_BASE + 83  → 19083
-        //   form         PORT_BASE + 86  → 19086
-        //   promotion    PORT_BASE + 88  → 19088
-        //   dashboard    PORT_BASE + 84  → 19084
-        //
-        // Each port-forward is opened in the background, then waitUntil +
-        // nc probes TCP connectivity — no fixed sleep (was sleep 8 in
-        // the original Jenkinsfile, line 342).
-        //
-        // PIDs are written to /tmp so post.always can kill exactly those
-        // processes without touching unrelated port-forwards on the agent.
-        // ─────────────────────────────────────────────────────────────────
         stage('E2E Tests') {
             steps {
-                withCredentials([
-                    usernamePassword(
-                        credentialsId: 'e2e-user-credentials',
-                        usernameVariable: 'E2E_USER',
-                        passwordVariable: 'E2E_PASS'
-                    ),
-                    usernamePassword(
-                        credentialsId: 'e2e-admin-credentials',
-                        usernameVariable: 'E2E_ADMIN_USER',
-                        passwordVariable: 'E2E_ADMIN_PASS'
-                    )
-                ]) {
+                withKubeConfig([credentialsId: 'kubeconfig-file', serverUrl: 'https://kubernetes.docker.internal:6443']) {
                     script {
-                        def base          = env.PORT_BASE.toInteger()
-                        def pfAuth        = base + 180   // 19180
-                        def pfIdentity    = base + 83    // 19083
-                        def pfForm        = base + 86    // 19086
-                        def pfPromotion   = base + 88    // 19088
-                        def pfDashboard   = base + 84    // 19084
-
-                        withEnv([
-                            "AUTH_SERVICE_URL=http://localhost:${pfAuth}",
-                            "IDENTITY_SERVICE_URL=http://localhost:${pfIdentity}",
-                            "FORM_SERVICE_URL=http://localhost:${pfForm}",
-                            "PROMOTION_SERVICE_URL=http://localhost:${pfPromotion}",
-                            "DASHBOARD_SERVICE_URL=http://localhost:${pfDashboard}"
-                        ]) {
-                            sh """
-                                kubectl port-forward svc/circleguard-auth-service      ${pfAuth}:8180      -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_auth.pid
-                                kubectl port-forward svc/circleguard-identity-service  ${pfIdentity}:8083  -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_identity.pid
-                                kubectl port-forward svc/circleguard-form-service      ${pfForm}:8086      -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_form.pid
-                                kubectl port-forward svc/circleguard-promotion-service ${pfPromotion}:8088 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_promotion.pid
-                                kubectl port-forward svc/circleguard-dashboard-service ${pfDashboard}:8084 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_dashboard.pid
-                            """
-
-                            sleep(20)
-
-                            // Wait for each port to accept TCP connections
-                            [pfAuth, pfIdentity, pfForm, pfPromotion, pfDashboard].each { port ->
-                                timeout(time: 120, unit: 'SECONDS') {
-                                    waitUntil {
-                                        0 == sh(returnStatus: true,
-                                                script: "nc -z localhost ${port} 2>/dev/null")
-                                    }
-                                }
-                            }
-
-                            try {
-                                sh """
-                                    ./gradlew :e2e-tests:test \\
-                                        --no-daemon
-                                """
-                            } finally {
-                                sh """
-                                    for f in /tmp/pf_e2e_auth.pid /tmp/pf_e2e_identity.pid \\
-                                              /tmp/pf_e2e_form.pid /tmp/pf_e2e_promotion.pid \\
-                                              /tmp/pf_e2e_dashboard.pid; do
-                                        [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
-                                        rm -f "\$f"
-                                    done
-                                """
-                            }
-                        }
+                        sleep(30)
+                        sh """
+                            ./gradlew \\
+                                :services:circleguard-auth-service:test \\
+                                :services:circleguard-identity-service:test \\
+                                :services:circleguard-form-service:test \\
+                                :services:circleguard-promotion-service:test \\
+                                :services:circleguard-notification-service:test \\
+                                :services:circleguard-dashboard-service:test \\
+                                --tests '*E2E*' \\
+                                --no-daemon \\
+                                --continue
+                        """
                     }
                 }
             }
             post {
                 always {
-                    junit allowEmptyResults: false,
-                          testResults: 'e2e-tests/build/test-results/test/*.xml'
+                    junit allowEmptyResults: true, testResults: '**/build/test-results/test/*.xml'
                 }
-                failure { echo 'Stage 6 (E2E Tests) failed — check REST Assured logs and pod status in circleguard-stage.' }
+                failure { echo 'Stage E2E Tests failed — check test results in Jenkins' }
             }
         }
 
