@@ -326,7 +326,10 @@ pipeline {
                     ]) {
                         script {
                             sh """
-                                ${KUBECTL} logs deployment/circleguard-auth-service -n ${K8S_NS_STAGE} --tail=50 | grep -i "flyway\\|migration\\|staff_guard\\|seed\\|error\\|started" || true
+                                echo "=== AUTH SERVICE LOGS ==="
+                                ${KUBECTL} logs deployment/circleguard-auth-service -n ${K8S_NS_STAGE} --tail=80 || true
+                                echo "=== AUTH SERVICE POD STATUS ==="
+                                ${KUBECTL} get pods -n ${K8S_NS_STAGE} -l app=circleguard-auth-service || true
                             """
 
                             sh """
