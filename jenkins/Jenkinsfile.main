@@ -232,7 +232,7 @@ pipeline {
                 script {
                     sh """
                         kubectl create namespace ${K8S_NS_STAGE} \\
-                            --dry-run=client -o yaml | kubectl apply --validate=false -f-
+                            --dry-run=client -o yaml | kubectl apply --validate=false -f -
                     """
 
                     sh """
@@ -243,12 +243,12 @@ pipeline {
                     """
 
                     sh """
-                        kubectl apply --validate=false -fk8s/postgres.yml  -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/neo4j.yml     -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/kafka.yml     -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/redis.yml     -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/openldap.yml  -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/mailhog.yml   -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/postgres.yml  -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/neo4j.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/kafka.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/redis.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/openldap.yml  -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/mailhog.yml   -n ${K8S_NS_STAGE}
                     """
 
                     sh """
@@ -260,12 +260,12 @@ pipeline {
 
                     // Application services (6 servicios del alcance del taller)
                     sh """
-                        kubectl apply --validate=false -fk8s/auth-service.yml         -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/identity-service.yml     -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/form-service.yml         -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/promotion-service.yml    -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/notification-service.yml -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -fk8s/dashboard-service.yml    -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/auth-service.yml         -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/identity-service.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/form-service.yml         -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/promotion-service.yml    -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/notification-service.yml -n ${K8S_NS_STAGE}
+                        kubectl apply --validate=false -f k8s/dashboard-service.yml    -n ${K8S_NS_STAGE}
                     """
 
                     sh """
@@ -478,18 +478,18 @@ pipeline {
                 script {
                     sh """
                         kubectl create namespace ${K8S_NS_PROD} \\
-                            --dry-run=client -o yaml | kubectl apply --validate=false -f-
+                            --dry-run=client -o yaml | kubectl apply --validate=false -f -
                     """
 
                     // Re-patch from the original manifest image names for production
                     // (workspace copies were modified in Stage 5; we re-apply the same tag)
                     sh """
-                        kubectl apply --validate=false -fk8s/postgres.yml  -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/neo4j.yml     -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/kafka.yml     -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/redis.yml     -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/openldap.yml  -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/mailhog.yml   -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/postgres.yml  -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/neo4j.yml     -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/kafka.yml     -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/redis.yml     -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/openldap.yml  -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/mailhog.yml   -n ${K8S_NS_PROD}
                     """
 
                     sh """
@@ -502,12 +502,12 @@ pipeline {
                     // The manifests were already patched in Stage 5 — apply directly
                     // Application services (6 servicios del alcance del taller)
                     sh """
-                        kubectl apply --validate=false -fk8s/auth-service.yml         -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/identity-service.yml     -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/form-service.yml         -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/promotion-service.yml    -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/notification-service.yml -n ${K8S_NS_PROD}
-                        kubectl apply --validate=false -fk8s/dashboard-service.yml    -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/auth-service.yml         -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/identity-service.yml     -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/form-service.yml         -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/promotion-service.yml    -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/notification-service.yml -n ${K8S_NS_PROD}
+                        kubectl apply --validate=false -f k8s/dashboard-service.yml    -n ${K8S_NS_PROD}
                     """
 
                     sh """
