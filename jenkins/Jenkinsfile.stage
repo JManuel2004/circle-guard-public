@@ -326,6 +326,11 @@ pipeline {
                         "PROMOTION_SERVICE_URL=http://localhost:30088",
                         "DASHBOARD_SERVICE_URL=http://localhost:30084"
                     ]) {
+                        bat """
+                            echo AUTH_SERVICE_URL=%AUTH_SERVICE_URL%
+                            echo E2E_USER=%E2E_USER%
+                            curl.exe -s -o NUL -w "Auth HTTP status: %%{http_code}" http://localhost:30180/api/v1/auth/login -X POST -H "Content-Type: application/json" -d "{\\"username\\":\\"staff_guard\\",\\"password\\":\\"password\\"}"
+                        """
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat "cmd /c \"%WORKSPACE%\\gradlew.bat :e2e-tests:test --no-daemon --continue\""
                         }
