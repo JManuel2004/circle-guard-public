@@ -286,7 +286,9 @@ pipeline {
                                 echo \$! > "${pidFile}"
                             """
 
-                            timeout(time: 30, unit: 'SECONDS') {
+                            sleep(15)
+
+                            timeout(time: 120, unit: 'SECONDS') {
                                 waitUntil {
                                     0 == sh(returnStatus: true,
                                             script: "nc -z localhost ${ep.local} 2>/dev/null")
