@@ -57,3 +57,4 @@ web-build/
 *_data/
 pgdata/
 neo4jdata/
+kubeconfig-local.yaml
