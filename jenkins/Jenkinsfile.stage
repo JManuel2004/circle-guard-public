@@ -43,7 +43,7 @@ pipeline {
         IMAGE_PREFIX    = 'circleguard'
         IMAGE_TAG       = "${BUILD_NUMBER}"
         K8S_NS_STAGE    = 'circleguard-stage'
-        KUBECONFIG      = credentials('kubeconfig-file')
+        KUBECTL         = 'kubectl --insecure-skip-tls-verify'
         // Base local port for E2E port-forwards.
         // E2E ports   = PORT_BASE + (svc_port - 8000)  e.g. 19000 + 180 = 19180
         // Locust ports = (PORT_BASE - 1000) + (svc_port - 8000)  e.g. 18000 + 180 = 18180
@@ -241,67 +241,70 @@ pipeline {
         // ─────────────────────────────────────────────────────────────────
         stage('Deploy → Stage') {
             steps {
-                script {
-                    sh """
-                        kubectl create namespace ${K8S_NS_STAGE} \\
-                            --dry-run=client -o yaml | kubectl apply --validate=false -f -
-                    """
+                withKubeConfig([credentialsId: 'kubeconfig-file',
+                                serverUrl:     'https://kubernetes.docker.internal:6443']) {
+                    script {
+                        sh """
+                            ${KUBECTL} create namespace ${K8S_NS_STAGE} \\
+                                --dry-run=client -o yaml | ${KUBECTL} apply --validate=false -f -
+                        """
 
-                    sh """
-                        for svc in auth identity form promotion notification dashboard; do
-                            sed -i "s|image: circleguard-\${svc}-service:.*|image: ${IMAGE_PREFIX}/circleguard-\${svc}-service:${IMAGE_TAG}|g" \\
-                                k8s/\${svc}-service.yml
-                        done
-                    """
+                        sh """
+                            for svc in auth identity form promotion notification dashboard; do
+                                sed -i "s|image: circleguard-\${svc}-service:.*|image: ${IMAGE_PREFIX}/circleguard-\${svc}-service:${IMAGE_TAG}|g" \\
+                                    k8s/\${svc}-service.yml
+                            done
+                        """
 
-                    // Infrastructure
-                    sh """
-                        kubectl apply --validate=false -f k8s/postgres.yml  -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/neo4j.yml     -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/kafka.yml     -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/redis.yml     -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/openldap.yml  -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/mailhog.yml   -n ${K8S_NS_STAGE}
-                    """
+                        // Infrastructure
+                        sh """
+                            ${KUBECTL} apply --validate=false -f k8s/postgres.yml  -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/neo4j.yml     -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/kafka.yml     -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/redis.yml     -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/openldap.yml  -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/mailhog.yml   -n ${K8S_NS_STAGE}
+                        """
 
-                    // Wait for infra by named deployment (|| true: some infra may be StatefulSets)
-                    sh """
-                        kubectl rollout status deployment/postgres -n ${K8S_NS_STAGE} --timeout=180s || true
-                        kubectl rollout status deployment/neo4j    -n ${K8S_NS_STAGE} --timeout=180s || true
-                        kubectl rollout status deployment/kafka    -n ${K8S_NS_STAGE} --timeout=180s || true
-                        kubectl rollout status deployment/redis    -n ${K8S_NS_STAGE} --timeout=180s || true
-                    """
+                        // Wait for infra by named deployment (|| true: some infra may be StatefulSets)
+                        sh """
+                            ${KUBECTL} rollout status deployment/postgres -n ${K8S_NS_STAGE} --timeout=180s || true
+                            ${KUBECTL} rollout status deployment/neo4j    -n ${K8S_NS_STAGE} --timeout=180s || true
+                            ${KUBECTL} rollout status deployment/kafka    -n ${K8S_NS_STAGE} --timeout=180s || true
+                            ${KUBECTL} rollout status deployment/redis    -n ${K8S_NS_STAGE} --timeout=180s || true
+                        """
 
-                    // Application services (6 servicios del alcance del taller)
-                    sh """
-                        kubectl apply --validate=false -f k8s/auth-service.yml         -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/identity-service.yml     -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/form-service.yml         -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/promotion-service.yml    -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/notification-service.yml -n ${K8S_NS_STAGE}
-                        kubectl apply --validate=false -f k8s/dashboard-service.yml    -n ${K8S_NS_STAGE}
-                    """
+                        // Application services (6 servicios del alcance del taller)
+                        sh """
+                            ${KUBECTL} apply --validate=false -f k8s/auth-service.yml         -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/identity-service.yml     -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/form-service.yml         -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/promotion-service.yml    -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/notification-service.yml -n ${K8S_NS_STAGE}
+                            ${KUBECTL} apply --validate=false -f k8s/dashboard-service.yml    -n ${K8S_NS_STAGE}
+                        """
 
-                    // Wait for each app service rollout individually (no || true — fail-fast)
-                    sh """
-                        kubectl rollout status deployment/circleguard-auth-service         -n ${K8S_NS_STAGE} --timeout=180s
-                        kubectl rollout status deployment/circleguard-identity-service     -n ${K8S_NS_STAGE} --timeout=180s
-                        kubectl rollout status deployment/circleguard-form-service         -n ${K8S_NS_STAGE} --timeout=180s
-                        kubectl rollout status deployment/circleguard-promotion-service    -n ${K8S_NS_STAGE} --timeout=300s
-                    """
-                    timeout(time: 60, unit: 'SECONDS') {
-                        waitUntil {
-                            def ready = sh(
-                                script: "kubectl get pods -n ${env.K8S_NS_STAGE} -l app=circleguard-promotion-service --field-selector=status.phase=Running --no-headers | wc -l",
-                                returnStdout: true
-                            ).trim()
-                            return ready.toInteger() >= 1
+                        // Wait for each app service rollout individually (no || true — fail-fast)
+                        sh """
+                            ${KUBECTL} rollout status deployment/circleguard-auth-service         -n ${K8S_NS_STAGE} --timeout=180s
+                            ${KUBECTL} rollout status deployment/circleguard-identity-service     -n ${K8S_NS_STAGE} --timeout=180s
+                            ${KUBECTL} rollout status deployment/circleguard-form-service         -n ${K8S_NS_STAGE} --timeout=180s
+                            ${KUBECTL} rollout status deployment/circleguard-promotion-service    -n ${K8S_NS_STAGE} --timeout=300s
+                        """
+                        timeout(time: 60, unit: 'SECONDS') {
+                            waitUntil {
+                                def ready = sh(
+                                    script: "${KUBECTL} get pods -n ${env.K8S_NS_STAGE} -l app=circleguard-promotion-service --field-selector=status.phase=Running --no-headers | wc -l",
+                                    returnStdout: true
+                                ).trim()
+                                return ready.toInteger() >= 1
+                            }
                         }
+                        sh """
+                            ${KUBECTL} rollout status deployment/circleguard-notification-service -n ${K8S_NS_STAGE} --timeout=180s
+                            ${KUBECTL} rollout status deployment/circleguard-dashboard-service    -n ${K8S_NS_STAGE} --timeout=180s
+                        """
                     }
-                    sh """
-                        kubectl rollout status deployment/circleguard-notification-service -n ${K8S_NS_STAGE} --timeout=180s
-                        kubectl rollout status deployment/circleguard-dashboard-service    -n ${K8S_NS_STAGE} --timeout=180s
-                    """
                 }
             }
             post {
@@ -510,13 +513,19 @@ pipeline {
         failure {
             script {
                 echo "Stage build #${env.IMAGE_TAG} FAILED — namespace '${env.K8S_NS_STAGE}' may be in a degraded state."
-                sh "kubectl get pods -n ${env.K8S_NS_STAGE} 2>/dev/null | grep -vE '(Running|Completed|Terminating)' || true"
+                withKubeConfig([credentialsId: 'kubeconfig-file',
+                                serverUrl:     'https://kubernetes.docker.internal:6443']) {
+                    sh "${env.KUBECTL} get pods -n ${env.K8S_NS_STAGE} 2>/dev/null | grep -vE '(Running|Completed|Terminating)' || true"
+                }
             }
         }
         always {
-            // Remove pods stuck in Failed phase so the next run starts clean
-            sh 'kubectl delete pods --field-selector=status.phase=Failed -n circleguard-stage || true'
-            sh 'kubectl delete namespace circleguard-stage --ignore-not-found=true || true'
+            sh 'docker image prune -f || true'
+            withKubeConfig([credentialsId: 'kubeconfig-file',
+                            serverUrl:     'https://kubernetes.docker.internal:6443']) {
+                sh "${env.KUBECTL} delete pods --field-selector=status.phase=Failed -n circleguard-stage || true"
+                sh "${env.KUBECTL} delete namespace circleguard-stage --ignore-not-found=true || true"
+            }
             cleanWs()
         }
     }
