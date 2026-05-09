@@ -33,9 +33,10 @@ kind: Service
 metadata:
   name: circleguard-dashboard-service
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: circleguard-dashboard-service
   ports:
     - port: 8084
       targetPort: 8084
+      nodePort: 30084

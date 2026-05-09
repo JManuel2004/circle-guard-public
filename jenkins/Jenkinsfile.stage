@@ -325,34 +325,13 @@ pipeline {
                                          passwordVariable: 'E2E_ADMIN_PASS')
                     ]) {
                         script {
-                            sh """
-                                echo "=== AUTH SERVICE LOGS ==="
-                                ${KUBECTL} logs deployment/circleguard-auth-service -n ${K8S_NS_STAGE} --tail=80 || true
-                                echo "=== AUTH SERVICE POD STATUS ==="
-                                ${KUBECTL} get pods -n ${K8S_NS_STAGE} -l app=circleguard-auth-service || true
-                            """
-
-                            sh """
-                                ${KUBECTL} port-forward svc/circleguard-auth-service      19180:8180 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_auth.pid
-                                ${KUBECTL} port-forward svc/circleguard-identity-service  19083:8083 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_identity.pid
-                                ${KUBECTL} port-forward svc/circleguard-form-service      19086:8086 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_form.pid
-                                ${KUBECTL} port-forward svc/circleguard-promotion-service 19088:8088 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_promotion.pid
-                                ${KUBECTL} port-forward svc/circleguard-dashboard-service 19084:8084 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_dashboard.pid
-                            """
-
                             sleep(30)
-
                             withEnv([
-                                "AUTH_SERVICE_URL=http://localhost:19180",
-                                "IDENTITY_SERVICE_URL=http://localhost:19083",
-                                "FORM_SERVICE_URL=http://localhost:19086",
-                                "PROMOTION_SERVICE_URL=http://localhost:19088",
-                                "DASHBOARD_SERVICE_URL=http://localhost:19084"
+                                "AUTH_SERVICE_URL=http://host.docker.internal:30180",
+                                "IDENTITY_SERVICE_URL=http://host.docker.internal:30083",
+                                "FORM_SERVICE_URL=http://host.docker.internal:30086",
+                                "PROMOTION_SERVICE_URL=http://host.docker.internal:30088",
+                                "DASHBOARD_SERVICE_URL=http://host.docker.internal:30084"
                             ]) {
                                 sh """
                                     ./gradlew :e2e-tests:test \\
@@ -366,17 +345,9 @@ pipeline {
             }
             post {
                 always {
-                    sh """
-                        for f in /tmp/pf_e2e_auth.pid /tmp/pf_e2e_identity.pid \\
-                                  /tmp/pf_e2e_form.pid /tmp/pf_e2e_promotion.pid \\
-                                  /tmp/pf_e2e_dashboard.pid; do
-                            [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
-                            rm -f "\$f"
-                        done
-                    """
                     junit allowEmptyResults: true, testResults: 'e2e-tests/build/test-results/test/*.xml'
                 }
-                failure { echo 'Stage E2E Tests failed — check test results' }
+                failure { echo 'Stage E2E Tests failed' }
             }
         }
 

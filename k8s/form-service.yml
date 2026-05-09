@@ -39,9 +39,10 @@ kind: Service
 metadata:
   name: circleguard-form-service
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: circleguard-form-service
   ports:
     - port: 8086
       targetPort: 8086
+      nodePort: 30086

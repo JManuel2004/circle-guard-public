@@ -43,9 +43,10 @@ kind: Service
 metadata:
   name: circleguard-identity-service
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: circleguard-identity-service
   ports:
     - port: 8083
       targetPort: 8083
+      nodePort: 30083

@@ -51,9 +51,10 @@ kind: Service
 metadata:
   name: circleguard-auth-service
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: circleguard-auth-service
   ports:
     - port: 8180
       targetPort: 8180
+      nodePort: 30180

@@ -58,9 +58,10 @@ kind: Service
 metadata:
   name: circleguard-promotion-service
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: circleguard-promotion-service
   ports:
     - port: 8088
       targetPort: 8088
+      nodePort: 30088

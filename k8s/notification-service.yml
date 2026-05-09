@@ -45,9 +45,10 @@ kind: Service
 metadata:
   name: circleguard-notification-service
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: circleguard-notification-service
   ports:
     - port: 8082
       targetPort: 8082
+      nodePort: 30082
