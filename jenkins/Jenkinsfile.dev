@@ -1,0 +1,356 @@
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  CircleGuard — Jenkinsfile.dev
+ *
+ *  Target branches : develop, feature/*
+ *  Jenkins job "Script Path": jenkins/Jenkinsfile.dev
+ *
+ *  Stages:
+ *    1. Checkout
+ *    2. Build Docker Images  (parallel, 6 services)
+ *    3. Unit Tests           (parallel, --continue)
+ *    4. Deploy DEV           (kubectl apply → circleguard-dev, imagePullPolicy: IfNotPresent)
+ *    5. Smoke Test DEV       (/actuator/health via port-forward + waitUntil)
+ *
+ *  Required Jenkins credentials  (Manage Jenkins → Credentials → Global):
+ *   ID                    Type                Purpose
+ *   ─────────────────     ──────────────────  ─────────────────────────────
+ *   kubeconfig-file       Secret file         kubeconfig for K8s cluster
+ *
+ *  Required Jenkins plugins:
+ *   pipeline-model-definition  workflow-scm-step  git
+ *   credentials-binding        junit              ws-cleanup
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_BUILDKIT = '1'
+        IMAGE_PREFIX    = 'circleguard'
+        IMAGE_TAG       = "${BUILD_NUMBER}"
+        K8S_NS_DEV      = 'circleguard-dev'
+        KUBECONFIG      = credentials('kubeconfig-file')
+    }
+
+    stages {
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 1 — CHECKOUT
+        // ─────────────────────────────────────────────────────────────────
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh 'git fetch --tags || true'
+            }
+            post {
+                failure { echo 'Stage 1 (Checkout) failed — check SCM configuration and credentials.' }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 2 — BUILD DOCKER IMAGES (parallel, 6 services)
+        //
+        // Build context is always the repo root so multi-module Dockerfiles
+        // can copy from sibling services.  DOCKER_BUILDKIT=1 enables layer
+        // caching.  Each image is tagged :BUILD_NUMBER (immutable, used by
+        // K8s) and :latest (convenience alias).
+        // ─────────────────────────────────────────────────────────────────
+        stage('Build Docker Images') {
+            parallel {
+
+                stage('auth-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-auth-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-auth-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-auth-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-auth-service — check Dockerfile and build context.' }
+                    }
+                }
+
+                stage('identity-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-identity-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-identity-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-identity-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-identity-service.' }
+                    }
+                }
+
+                stage('form-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-form-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-form-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-form-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-form-service.' }
+                    }
+                }
+
+                stage('promotion-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-promotion-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-promotion-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-promotion-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-promotion-service.' }
+                    }
+                }
+
+                stage('notification-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-notification-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-notification-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-notification-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-notification-service.' }
+                    }
+                }
+
+                stage('dashboard-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-dashboard-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-dashboard-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-dashboard-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-dashboard-service.' }
+                    }
+                }
+
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 3 — UNIT TESTS (parallel Gradle workers, --continue)
+        //
+        // --continue collects failures from all modules before stopping so
+        // every test report is archived in a single run.
+        // ─────────────────────────────────────────────────────────────────
+        stage('Unit Tests') {
+            steps {
+                sh """
+                    ./gradlew \\
+                        :services:circleguard-auth-service:test \\
+                        :services:circleguard-identity-service:test \\
+                        :services:circleguard-form-service:test \\
+                        :services:circleguard-promotion-service:test \\
+                        :services:circleguard-notification-service:test \\
+                        :services:circleguard-dashboard-service:test \\
+                        --no-daemon \\
+                        --parallel \\
+                        --continue
+                """
+            }
+            post {
+                always {
+                    junit allowEmptyResults: false,
+                          testResults: '**/build/test-results/test/*.xml'
+                }
+                failure { echo 'Stage 3 (Unit Tests) failed — review JUnit report in Jenkins for failing test classes.' }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 4 — DEPLOY DEV  [new — not in original Jenkinsfile]
+        //
+        // Applies the full k8s/ manifest set to circleguard-dev.
+        // Images are consumed from the local Docker daemon (built in Stage 2)
+        // via imagePullPolicy: IfNotPresent — no registry push needed.
+        //
+        // Infra deployments (postgres, neo4j, kafka, redis) are waited on
+        // individually via kubectl rollout status so the pipeline unblocks
+        // as soon as each pod is Ready — no fixed sleep.
+        //
+        // Application services are applied after infra is Ready and each
+        // rollout is waited on with --timeout=120s (fail-fast on bad image).
+        // ─────────────────────────────────────────────────────────────────
+        stage('Deploy DEV') {
+            steps {
+                script {
+                    sh """
+                        kubectl create namespace ${K8S_NS_DEV} \\
+                            --dry-run=client -o yaml | kubectl apply -f -
+                    """
+
+                    // Patch :latest → local :BUILD_NUMBER tag in workspace copies
+                    sh """
+                        for svc in auth identity form promotion notification dashboard; do
+                            sed -i "s|image: circleguard-\${svc}-service:.*|image: ${IMAGE_PREFIX}/circleguard-\${svc}-service:${IMAGE_TAG}|g" \\
+                                k8s/\${svc}-service.yml
+                        done
+                    """
+
+                    // Infrastructure
+                    sh """
+                        kubectl apply -f k8s/postgres.yml  -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/neo4j.yml     -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/kafka.yml     -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/redis.yml     -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/openldap.yml  -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/mailhog.yml   -n ${K8S_NS_DEV}
+                    """
+
+                    // Wait for infra deployments individually (|| true: infra may use StatefulSets)
+                    sh """
+                        kubectl rollout status deployment/postgres -n ${K8S_NS_DEV} --timeout=120s || true
+                        kubectl rollout status deployment/neo4j    -n ${K8S_NS_DEV} --timeout=120s || true
+                        kubectl rollout status deployment/kafka    -n ${K8S_NS_DEV} --timeout=120s || true
+                        kubectl rollout status deployment/redis    -n ${K8S_NS_DEV} --timeout=120s || true
+                    """
+
+                    // Application services (6 servicios del alcance del taller)
+                    sh """
+                        kubectl apply -f k8s/auth-service.yml         -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/identity-service.yml     -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/form-service.yml         -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/promotion-service.yml    -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/notification-service.yml -n ${K8S_NS_DEV}
+                        kubectl apply -f k8s/dashboard-service.yml    -n ${K8S_NS_DEV}
+                    """
+
+                    // Wait for each app service rollout individually (fail-fast: no || true)
+                    sh """
+                        kubectl rollout status deployment/circleguard-auth-service         -n ${K8S_NS_DEV} --timeout=120s
+                        kubectl rollout status deployment/circleguard-identity-service     -n ${K8S_NS_DEV} --timeout=120s
+                        kubectl rollout status deployment/circleguard-form-service         -n ${K8S_NS_DEV} --timeout=120s
+                        kubectl rollout status deployment/circleguard-promotion-service    -n ${K8S_NS_DEV} --timeout=120s
+                        kubectl rollout status deployment/circleguard-notification-service -n ${K8S_NS_DEV} --timeout=120s
+                        kubectl rollout status deployment/circleguard-dashboard-service    -n ${K8S_NS_DEV} --timeout=120s
+                    """
+                }
+            }
+            post {
+                failure { echo 'Stage 4 (Deploy DEV) failed — inspect: kubectl get events -n circleguard-dev --sort-by=.lastTimestamp' }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 6 — SMOKE TEST DEV  [new — not in original Jenkinsfile]
+        //
+        // For each application service:
+        //   1. Opens a kubectl port-forward in the background.
+        //   2. Uses waitUntil + nc TCP probe to wait for the port to accept
+        //      connections — no fixed sleep.
+        //   3. Curls /actuator/health and asserts HTTP 200.
+        //   4. Kills the port-forward.
+        //
+        // post.always kills any leftover PF processes so the agent is clean
+        // even if the stage errors mid-loop.
+        //
+        // Ports follow the pattern 17000 + (svc_port - 8000):
+        //   auth         8180 → 17180
+        //   identity     8083 → 17083
+        //   form         8086 → 17086
+        //   promotion    8088 → 17088
+        //   notification 8082 → 17082
+        //   dashboard    8084 → 17084
+        // ─────────────────────────────────────────────────────────────────
+        stage('Smoke Test DEV') {
+            steps {
+                script {
+                    def endpoints = [
+                        [svc: 'circleguard-auth-service',         local: 17180, remote: 8180],
+                        [svc: 'circleguard-identity-service',     local: 17083, remote: 8083],
+                        [svc: 'circleguard-form-service',         local: 17086, remote: 8086],
+                        [svc: 'circleguard-promotion-service',    local: 17088, remote: 8088],
+                        [svc: 'circleguard-notification-service', local: 17082, remote: 8082],
+                        [svc: 'circleguard-dashboard-service',    local: 17084, remote: 8084],
+                    ]
+
+                    endpoints.each { ep ->
+                        def pidFile = "/tmp/pf_smoke_${ep.svc}.pid"
+
+                        sh """
+                            kubectl port-forward svc/${ep.svc} ${ep.local}:${ep.remote} \\
+                                -n ${K8S_NS_DEV} &
+                            echo \$! > "${pidFile}"
+                        """
+
+                        // Wait for TCP port to accept connections — no fixed sleep
+                        timeout(time: 30, unit: 'SECONDS') {
+                            waitUntil {
+                                0 == sh(returnStatus: true,
+                                        script: "nc -z localhost ${ep.local} 2>/dev/null")
+                            }
+                        }
+
+                        def httpStatus = sh(
+                            returnStdout: true,
+                            script: "curl -s -o /dev/null -w '%{http_code}' http://localhost:${ep.local}/actuator/health"
+                        ).trim()
+
+                        sh """
+                            [ -f "${pidFile}" ] && kill "\$(cat ${pidFile})" 2>/dev/null || true
+                            rm -f "${pidFile}"
+                        """
+
+                        if (httpStatus != '200') {
+                            error("Smoke test FAILED — ${ep.svc}: /actuator/health returned HTTP ${httpStatus}")
+                        }
+                        echo "SMOKE OK  ${ep.svc} → HTTP ${httpStatus}"
+                    }
+                }
+            }
+            post {
+                always {
+                    sh """
+                        for f in /tmp/pf_smoke_*.pid; do
+                            [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
+                            rm -f "\$f"
+                        done
+                    """
+                }
+                failure { echo 'Stage 6 (Smoke Test DEV) failed — one or more services did not return HTTP 200 on /actuator/health.' }
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo "DEV build #${env.IMAGE_TAG} deployed and smoke-tested in namespace '${env.K8S_NS_DEV}'."
+        }
+        failure {
+            script {
+                echo "DEV build #${env.IMAGE_TAG} FAILED on branch '${env.BRANCH_NAME}'."
+                sh "kubectl get pods -n ${env.K8S_NS_DEV} 2>/dev/null | grep -vE '(Running|Completed|Terminating)' || true"
+            }
+        }
+        always {
+            cleanWs()
+        }
+    }
+}

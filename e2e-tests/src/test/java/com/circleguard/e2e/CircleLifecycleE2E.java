@@ -28,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   c) After joining, the circle appears in the user's circle list.
  */
 @Tag("e2e")
-@Disabled("Temporarily disabled: depends on promotion-service which is scaled to 0 replicas")
 @DisplayName("E2E Flow 4 – Circle lifecycle (auth → promotion)")
 class CircleLifecycleE2E {
 

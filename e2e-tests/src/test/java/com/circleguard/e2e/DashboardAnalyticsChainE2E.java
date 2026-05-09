@@ -5,7 +5,6 @@ import com.circleguard.e2e.support.AuthHelper;
 import com.circleguard.e2e.support.AuthHelper.LoginResult;
 import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   c) The time-series endpoint respects the 'period' query parameter.
  */
 @Tag("e2e")
-@Disabled("Temporarily disabled: dashboard endpoints chain to promotion-service which is scaled to 0 replicas")
 @DisplayName("E2E Flow 5 – Dashboard analytics chain with k-anonymity (auth → dashboard → promotion)")
 class DashboardAnalyticsChainE2E {
 

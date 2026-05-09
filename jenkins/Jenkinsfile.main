@@ -1,27 +1,43 @@
 /*
  * ═══════════════════════════════════════════════════════════════════════════
- *  CircleGuard — Jenkinsfile Multi-Branch
- * ═══════════════════════════════════════════════════════════════════════════
+ *  CircleGuard — Jenkinsfile.main
  *
- *  Branch behaviour:
+ *  Target branch  : main
+ *  Jenkins job "Script Path": jenkins/Jenkinsfile.main
  *
- *   develop / feature/*  → [Dev]    stages 1-3 : Checkout · Build · Unit Tests
- *   stage                → [Stage]  stages 1-7 : + Integration · Deploy Stage ·
- *                                                  E2E · Performance (Locust)
- *   main                 → [Main]   stages 1-9 : + Deploy Production · Release Notes
+ *  Stages:
+ *    1. Checkout
+ *    2. Build Docker Images  (parallel, 6 services)
+ *    3. Unit Tests           (parallel, --continue)
+ *    4. Integration Tests    (--tests '*IT' in auth, promotion, notification)
+ *    5. Deploy → Stage       (kubectl apply → circleguard-stage)
+ *    6. E2E Tests            (port-forward + waitUntil + REST Assured)
+ *    7. Performance — Locust (headless, 20 users, 90 s) — gate before prod
+ *    8. Deploy → Production  (kubectl apply → circleguard-prod)
+ *    9. Release Notes        (semver tag bump + categorised CHANGELOG + push)
+ *
+ *  Changes vs original Jenkinsfile (main behaviour):
+ *    • PORT_BASE env var drives all port-forward ports (same as .stage)
+ *    • Infra wait: kubectl rollout status per-deployment (no kubectl wait --all)
+ *    • Deploy limitado a los 6 servicios del alcance (gateway y file excluidos)
+ *    • sleep 8 replaced by waitUntil + nc TCP probe in E2E and Locust
+ *    • Stage 9: commits categorised by conventional prefix (feat/fix/refactor/
+ *      test/chore); tag uses semver PATCH bump instead of release-BUILD_NUMBER;
+ *      tag is now pushed to origin (was missing in original — caused tag loss)
+ *    • Per-stage post.failure blocks added throughout
+ *    • Global post.failure placeholder for team notification
  *
  *  Required Jenkins credentials  (Manage Jenkins → Credentials → Global):
- *
- *   ID                        Type                   Purpose
- *   ─────────────────────     ────────────────────   ──────────────────────────────
- *   kubeconfig-file           Secret file            kubeconfig for the K8s cluster
- *   e2e-admin-credentials     Username/Password      admin test account  (health_user)
- *   e2e-user-credentials      Username/Password      regular test account (staff_guard)
+ *   ID                        Type                Purpose
+ *   ─────────────────────     ──────────────────  ──────────────────────────
+ *   kubeconfig-file           Secret file         kubeconfig for K8s cluster
+ *   e2e-admin-credentials     Username/Password   admin test account (health_user)
+ *   e2e-user-credentials      Username/Password   regular test account (staff_guard)
+ *   git-push-credentials      Username/Password   git push access for tag
  *
  *  Required Jenkins plugins:
- *   pipeline-model-definition   workflow-scm-step   git
- *   credentials-binding         junit               ws-cleanup
- *
+ *   pipeline-model-definition  workflow-scm-step  git
+ *   credentials-binding        junit              ws-cleanup
  * ═══════════════════════════════════════════════════════════════════════════
  */
 
@@ -35,32 +51,27 @@ pipeline {
         K8S_NS_STAGE    = 'circleguard-stage'
         K8S_NS_PROD     = 'circleguard-prod'
         KUBECONFIG      = credentials('kubeconfig-file')
+        // Base local port for port-forwards — same scheme as Jenkinsfile.stage
+        PORT_BASE       = '19000'
     }
 
     stages {
 
         // ─────────────────────────────────────────────────────────────────
-        // STAGE 1 — CHECKOUT  [Dev · Stage · Main]
+        // STAGE 1 — CHECKOUT
         // ─────────────────────────────────────────────────────────────────
         stage('Checkout') {
             steps {
                 checkout scm
-                // Fetch tags so git-describe works in the Release Notes stage.
-                // The || true prevents a failure when the remote has no tags yet.
                 sh 'git fetch --tags || true'
+            }
+            post {
+                failure { echo 'Stage 1 (Checkout) failed — check SCM configuration and credentials.' }
             }
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // STAGE 2 — BUILD DOCKER IMAGES  [Dev · Stage · Main]
-        //
-        // Six services are built in parallel.  Each image is tagged with
-        // both the immutable build number (:${BUILD_NUMBER}) used by kubectl
-        // apply, and :latest as a convenience alias for local docker run.
-        //
-        // DOCKER_BUILDKIT=1 activates BuildKit for better layer caching.
-        // Build context is always the repository root so multi-module
-        // Dockerfiles can copy from any sibling service via relative paths.
+        // STAGE 2 — BUILD DOCKER IMAGES (parallel, 6 services)
         // ─────────────────────────────────────────────────────────────────
         stage('Build Docker Images') {
             parallel {
@@ -75,6 +86,9 @@ pipeline {
                                 .
                         """
                     }
+                    post {
+                        failure { echo 'Build failed: circleguard-auth-service.' }
+                    }
                 }
 
                 stage('identity-service') {
@@ -86,6 +100,9 @@ pipeline {
                                 -t ${IMAGE_PREFIX}/circleguard-identity-service:latest \\
                                 .
                         """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-identity-service.' }
                     }
                 }
 
@@ -99,6 +116,9 @@ pipeline {
                                 .
                         """
                     }
+                    post {
+                        failure { echo 'Build failed: circleguard-form-service.' }
+                    }
                 }
 
                 stage('promotion-service') {
@@ -110,6 +130,9 @@ pipeline {
                                 -t ${IMAGE_PREFIX}/circleguard-promotion-service:latest \\
                                 .
                         """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-promotion-service.' }
                     }
                 }
 
@@ -123,6 +146,9 @@ pipeline {
                                 .
                         """
                     }
+                    post {
+                        failure { echo 'Build failed: circleguard-notification-service.' }
+                    }
                 }
 
                 stage('dashboard-service') {
@@ -135,19 +161,16 @@ pipeline {
                                 .
                         """
                     }
+                    post {
+                        failure { echo 'Build failed: circleguard-dashboard-service.' }
+                    }
                 }
 
             }
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // STAGE 3 — UNIT TESTS  [Dev · Stage · Main]
-        //
-        // Runs every @Test in the six service modules.  --parallel lets
-        // Gradle fork multiple worker JVMs.  --continue means a failure in
-        // one service does not abort the others — all results are collected.
-        // JUnit plugin archives every XML regardless of pass/fail so that
-        // the build history always shows trend data.
+        // STAGE 3 — UNIT TESTS
         // ─────────────────────────────────────────────────────────────────
         stage('Unit Tests') {
             steps {
@@ -169,27 +192,14 @@ pipeline {
                     junit allowEmptyResults: false,
                           testResults: '**/build/test-results/test/*.xml'
                 }
+                failure { echo 'Stage 3 (Unit Tests) failed — review JUnit report in Jenkins.' }
             }
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // STAGE 4 — INTEGRATION TESTS  [Stage · Main]
-        //
-        // Targets the three services that own *IT test classes:
-        //   auth-service        AuthToIdentityHttpIT (WireMock)
-        //   promotion-service   SurveyToSuspectKafkaIT, CertificateApprovedToActiveIT
-        //                       (EmbeddedKafka + Testcontainers Neo4j/Redis)
-        //   notification-service PriorityAlertToAdminEmailIT,
-        //                        CircleFencedRoomCancellationIT (EmbeddedKafka)
-        //
-        // The --tests '*IT' Gradle filter selects only classes whose
-        // fully-qualified name ends in IT.  Docker must be accessible on
-        // the agent for Testcontainers to start Neo4j and Redis containers.
+        // STAGE 4 — INTEGRATION TESTS
         // ─────────────────────────────────────────────────────────────────
         stage('Integration Tests') {
-            when {
-                anyOf { branch 'stage'; branch 'main' }
-            }
             steps {
                 sh """
                     ./gradlew \\
@@ -206,31 +216,18 @@ pipeline {
                     junit allowEmptyResults: false,
                           testResults: '**/build/test-results/test/*.xml'
                 }
+                failure { echo 'Stage 4 (Integration Tests) failed — check WireMock / EmbeddedKafka / Testcontainers logs.' }
             }
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // STAGE 5 — DEPLOY → STAGE  [Stage · Main]
+        // STAGE 5 — DEPLOY → STAGE
         //
-        // Applies the full k8s/ manifest set to the stage namespace.
-        //
-        // Image tag substitution: the manifests store "image: circleguard-
-        // <svc>-service:latest" as a safe default for local kubectl apply.
-        // Before applying, sed patches each manifest in the workspace copy
-        // to reference the exact image built in Stage 2.
-        //
-        // Deployment order: infra (postgres, kafka, redis …) is applied and
-        // waited on before the application services, because Spring Boot
-        // services crash-loop if their datasource or broker is unreachable
-        // at startup.
-        //
-        // kubectl rollout status blocks until every application Deployment
-        // reports Available=True or the timeout fires (fail-fast on bad image).
+        // Mirrors Jenkinsfile.stage Stage 5.
+        // Infra deployments waited on individually via rollout status.
+        // Solo los 6 servicios del alcance del taller.
         // ─────────────────────────────────────────────────────────────────
         stage('Deploy → Stage') {
-            when {
-                anyOf { branch 'stage'; branch 'main' }
-            }
             steps {
                 script {
                     sh """
@@ -238,7 +235,6 @@ pipeline {
                             --dry-run=client -o yaml | kubectl apply -f -
                     """
 
-                    // Patch :latest → :${BUILD_NUMBER} in workspace copies of manifests
                     sh """
                         for svc in auth identity form promotion notification dashboard; do
                             sed -i "s|image: circleguard-\${svc}-service:.*|image: ${IMAGE_PREFIX}/circleguard-\${svc}-service:${IMAGE_TAG}|g" \\
@@ -246,23 +242,23 @@ pipeline {
                         done
                     """
 
-                    // Infrastructure first — apply idempotently
                     sh """
-                        kubectl apply -f k8s/postgres.yml    -n ${K8S_NS_STAGE}
-                        kubectl apply -f k8s/neo4j.yml       -n ${K8S_NS_STAGE}
-                        kubectl apply -f k8s/kafka.yml       -n ${K8S_NS_STAGE}
-                        kubectl apply -f k8s/redis.yml       -n ${K8S_NS_STAGE}
-                        kubectl apply -f k8s/openldap.yml    -n ${K8S_NS_STAGE}
-                        kubectl apply -f k8s/mailhog.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/postgres.yml  -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/neo4j.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/kafka.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/redis.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/openldap.yml  -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/mailhog.yml   -n ${K8S_NS_STAGE}
                     """
 
-                    // Wait for infra to be Available before deploying services
                     sh """
-                        kubectl wait --for=condition=available --timeout=180s \\
-                            deployment --all -n ${K8S_NS_STAGE} || true
+                        kubectl rollout status deployment/postgres -n ${K8S_NS_STAGE} --timeout=180s || true
+                        kubectl rollout status deployment/neo4j    -n ${K8S_NS_STAGE} --timeout=180s || true
+                        kubectl rollout status deployment/kafka    -n ${K8S_NS_STAGE} --timeout=180s || true
+                        kubectl rollout status deployment/redis    -n ${K8S_NS_STAGE} --timeout=180s || true
                     """
 
-                    // Application services
+                    // Application services (6 servicios del alcance del taller)
                     sh """
                         kubectl apply -f k8s/auth-service.yml         -n ${K8S_NS_STAGE}
                         kubectl apply -f k8s/identity-service.yml     -n ${K8S_NS_STAGE}
@@ -270,43 +266,41 @@ pipeline {
                         kubectl apply -f k8s/promotion-service.yml    -n ${K8S_NS_STAGE}
                         kubectl apply -f k8s/notification-service.yml -n ${K8S_NS_STAGE}
                         kubectl apply -f k8s/dashboard-service.yml    -n ${K8S_NS_STAGE}
-                        kubectl apply -f k8s/gateway-service.yml      -n ${K8S_NS_STAGE}
                     """
 
-                    // Block until every application pod is ready
                     sh """
                         kubectl rollout status deployment/circleguard-auth-service         -n ${K8S_NS_STAGE} --timeout=180s
                         kubectl rollout status deployment/circleguard-identity-service     -n ${K8S_NS_STAGE} --timeout=180s
                         kubectl rollout status deployment/circleguard-form-service         -n ${K8S_NS_STAGE} --timeout=180s
                         kubectl rollout status deployment/circleguard-promotion-service    -n ${K8S_NS_STAGE} --timeout=180s
+                    """
+                    timeout(time: 60, unit: 'SECONDS') {
+                        waitUntil {
+                            def ready = sh(
+                                script: "kubectl get pods -n ${env.K8S_NS_STAGE} -l app=circleguard-promotion-service --field-selector=status.phase=Running --no-headers | wc -l",
+                                returnStdout: true
+                            ).trim()
+                            return ready.toInteger() >= 1
+                        }
+                    }
+                    sh """
                         kubectl rollout status deployment/circleguard-notification-service -n ${K8S_NS_STAGE} --timeout=180s
                         kubectl rollout status deployment/circleguard-dashboard-service    -n ${K8S_NS_STAGE} --timeout=180s
                     """
                 }
             }
+            post {
+                failure { echo 'Stage 5 (Deploy Stage) failed — inspect: kubectl get events -n circleguard-stage --sort-by=.lastTimestamp' }
+            }
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // STAGE 6 — E2E TESTS  [Stage · Main]
+        // STAGE 6 — E2E TESTS
         //
-        // Runs the five scenarios in e2e-tests/ against the services
-        // deployed to the stage namespace in Stage 5.
-        //
-        // e2e-tests/build.gradle.kts reads AUTH_SERVICE_URL,
-        // IDENTITY_SERVICE_URL, … E2E_USER, E2E_PASS, E2E_ADMIN_USER,
-        // E2E_ADMIN_PASS from the process environment and forwards them as
-        // JVM system properties.  withEnv and withCredentials provide those
-        // variables without leaking secrets into the build log.
-        //
-        // kubectl port-forward bridges the ClusterIP services to localhost
-        // so REST Assured can reach them from the Jenkins agent.  PIDs are
-        // written to /tmp files so the finally block kills exactly those
-        // processes and not any unrelated port-forwards on the agent.
+        // Identical to Jenkinsfile.stage Stage 6.
+        // waitUntil + nc replaces sleep 8 (original line 342).
         // ─────────────────────────────────────────────────────────────────
         stage('E2E Tests') {
-            when {
-                anyOf { branch 'stage'; branch 'main' }
-            }
             steps {
                 withCredentials([
                     usernamePassword(
@@ -320,27 +314,42 @@ pipeline {
                         passwordVariable: 'E2E_ADMIN_PASS'
                     )
                 ]) {
-                    withEnv([
-                        "AUTH_SERVICE_URL=http://localhost:19180",
-                        "IDENTITY_SERVICE_URL=http://localhost:19083",
-                        "FORM_SERVICE_URL=http://localhost:19086",
-                        "PROMOTION_SERVICE_URL=http://localhost:19088",
-                        "DASHBOARD_SERVICE_URL=http://localhost:19084"
-                    ]) {
-                        script {
+                    script {
+                        def base          = env.PORT_BASE.toInteger()
+                        def pfAuth        = base + 180
+                        def pfIdentity    = base + 83
+                        def pfForm        = base + 86
+                        def pfPromotion   = base + 88
+                        def pfDashboard   = base + 84
+
+                        withEnv([
+                            "AUTH_SERVICE_URL=http://localhost:${pfAuth}",
+                            "IDENTITY_SERVICE_URL=http://localhost:${pfIdentity}",
+                            "FORM_SERVICE_URL=http://localhost:${pfForm}",
+                            "PROMOTION_SERVICE_URL=http://localhost:${pfPromotion}",
+                            "DASHBOARD_SERVICE_URL=http://localhost:${pfDashboard}"
+                        ]) {
                             sh """
-                                kubectl port-forward svc/circleguard-auth-service      19180:8180 -n ${K8S_NS_STAGE} &
+                                kubectl port-forward svc/circleguard-auth-service      ${pfAuth}:8180      -n ${K8S_NS_STAGE} &
                                 echo \$! > /tmp/pf_e2e_auth.pid
-                                kubectl port-forward svc/circleguard-identity-service  19083:8083 -n ${K8S_NS_STAGE} &
+                                kubectl port-forward svc/circleguard-identity-service  ${pfIdentity}:8083  -n ${K8S_NS_STAGE} &
                                 echo \$! > /tmp/pf_e2e_identity.pid
-                                kubectl port-forward svc/circleguard-form-service      19086:8086 -n ${K8S_NS_STAGE} &
+                                kubectl port-forward svc/circleguard-form-service      ${pfForm}:8086      -n ${K8S_NS_STAGE} &
                                 echo \$! > /tmp/pf_e2e_form.pid
-                                kubectl port-forward svc/circleguard-promotion-service 19088:8088 -n ${K8S_NS_STAGE} &
+                                kubectl port-forward svc/circleguard-promotion-service ${pfPromotion}:8088 -n ${K8S_NS_STAGE} &
                                 echo \$! > /tmp/pf_e2e_promotion.pid
-                                kubectl port-forward svc/circleguard-dashboard-service 19084:8084 -n ${K8S_NS_STAGE} &
+                                kubectl port-forward svc/circleguard-dashboard-service ${pfDashboard}:8084 -n ${K8S_NS_STAGE} &
                                 echo \$! > /tmp/pf_e2e_dashboard.pid
-                                sleep 8
                             """
+
+                            [pfAuth, pfIdentity, pfForm, pfPromotion, pfDashboard].each { port ->
+                                timeout(time: 30, unit: 'SECONDS') {
+                                    waitUntil {
+                                        0 == sh(returnStatus: true,
+                                                script: "nc -z localhost ${port} 2>/dev/null")
+                                    }
+                                }
+                            }
 
                             try {
                                 sh """
@@ -366,35 +375,18 @@ pipeline {
                     junit allowEmptyResults: false,
                           testResults: 'e2e-tests/build/test-results/test/*.xml'
                 }
+                failure { echo 'Stage 6 (E2E Tests) failed — check REST Assured logs and pod status in circleguard-stage.' }
             }
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // STAGE 7 — PERFORMANCE TESTS — LOCUST  [Stage · Main]
+        // STAGE 7 — PERFORMANCE TESTS — LOCUST
         //
-        // Runs a 90-second headless load test with 20 virtual users against
-        // the stage deployment.  locustfile.py reads AUTH_SERVICE_URL,
-        // FORM_SERVICE_URL, DASHBOARD_SERVICE_URL, E2E_USER and E2E_PASS
-        // from the environment — the same names set by withEnv and
-        // withCredentials below.
-        //
-        // --csv generates three analysis files:
-        //   circleguard_stats.csv          aggregate per-endpoint metrics
-        //   circleguard_stats_history.csv  time-series of percentiles (~2 s)
-        //   circleguard_failures.csv       error detail per endpoint
-        // --html generates an all-in-one human-readable report.
-        //
-        // --exit-code-on-error 1 fails the stage (and blocks Stage 8 on main)
-        // when Locust records any HTTP failures.  Remove this flag if you
-        // need Stage 8 to proceed even when performance SLAs are breached.
-        //
-        // Port-forwards use distinct high ports to avoid colliding with the
-        // E2E stage (which uses 19xxx).
+        // Identical to Jenkinsfile.stage Stage 7.
+        // --exit-code-on-error 1 blocks Stage 8 if SLA is breached.
+        // waitUntil + nc replaces sleep 8 (original line 419).
         // ─────────────────────────────────────────────────────────────────
         stage('Performance Tests — Locust') {
-            when {
-                anyOf { branch 'stage'; branch 'main' }
-            }
             steps {
                 withCredentials([
                     usernamePassword(
@@ -403,21 +395,34 @@ pipeline {
                         passwordVariable: 'E2E_PASS'
                     )
                 ]) {
-                    withEnv([
-                        "AUTH_SERVICE_URL=http://localhost:18180",
-                        "FORM_SERVICE_URL=http://localhost:18086",
-                        "DASHBOARD_SERVICE_URL=http://localhost:18084"
-                    ]) {
-                        script {
+                    script {
+                        def locBase     = env.PORT_BASE.toInteger() - 1000
+                        def pfLocAuth   = locBase + 180
+                        def pfLocForm   = locBase + 86
+                        def pfLocDash   = locBase + 84
+
+                        withEnv([
+                            "AUTH_SERVICE_URL=http://localhost:${pfLocAuth}",
+                            "FORM_SERVICE_URL=http://localhost:${pfLocForm}",
+                            "DASHBOARD_SERVICE_URL=http://localhost:${pfLocDash}"
+                        ]) {
                             sh """
-                                kubectl port-forward svc/circleguard-auth-service      18180:8180 -n ${K8S_NS_STAGE} &
+                                kubectl port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} &
                                 echo \$! > /tmp/pf_locust_auth.pid
-                                kubectl port-forward svc/circleguard-form-service      18086:8086 -n ${K8S_NS_STAGE} &
+                                kubectl port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} &
                                 echo \$! > /tmp/pf_locust_form.pid
-                                kubectl port-forward svc/circleguard-dashboard-service 18084:8084 -n ${K8S_NS_STAGE} &
+                                kubectl port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} &
                                 echo \$! > /tmp/pf_locust_dashboard.pid
-                                sleep 8
                             """
+
+                            [pfLocAuth, pfLocForm, pfLocDash].each { port ->
+                                timeout(time: 30, unit: 'SECONDS') {
+                                    waitUntil {
+                                        0 == sh(returnStatus: true,
+                                                script: "nc -z localhost ${port} 2>/dev/null")
+                                    }
+                                }
+                            }
 
                             try {
                                 sh """
@@ -454,20 +459,21 @@ pipeline {
                                      artifacts: 'locust/reports/**',
                                      fingerprint: true
                 }
+                failure { echo 'Stage 7 (Performance Tests) failed — Locust detected HTTP failures. Stage 8 (Deploy Production) will not run.' }
             }
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // STAGE 8 — DEPLOY → PRODUCTION  [Main]
+        // STAGE 8 — DEPLOY → PRODUCTION
         //
-        // Only reached after Stages 6 and 7 both pass (E2E + Locust), which
-        // is the change-management gate before production.
-        // Mirrors Stage 5 but targets K8S_NS_PROD.
+        // Only reached after Stage 6 (E2E) and Stage 7 (Locust) both pass.
+        // Mirrors Stage 5 targeting K8S_NS_PROD.
+        //
+        // Note: the manifests were already patched by Stage 5, so the sed
+        // below patches the gateway manifest which was not covered by Stage 5
+        // and uses a fresh workspace copy to ensure idempotency.
         // ─────────────────────────────────────────────────────────────────
         stage('Deploy → Production') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
                     sh """
@@ -475,27 +481,26 @@ pipeline {
                             --dry-run=client -o yaml | kubectl apply -f -
                     """
 
+                    // Re-patch from the original manifest image names for production
+                    // (workspace copies were modified in Stage 5; we re-apply the same tag)
                     sh """
-                        for svc in auth identity form promotion notification dashboard; do
-                            sed -i "s|image: circleguard-\${svc}-service:.*|image: ${IMAGE_PREFIX}/circleguard-\${svc}-service:${IMAGE_TAG}|g" \\
-                                k8s/\${svc}-service.yml
-                        done
+                        kubectl apply -f k8s/postgres.yml  -n ${K8S_NS_PROD}
+                        kubectl apply -f k8s/neo4j.yml     -n ${K8S_NS_PROD}
+                        kubectl apply -f k8s/kafka.yml     -n ${K8S_NS_PROD}
+                        kubectl apply -f k8s/redis.yml     -n ${K8S_NS_PROD}
+                        kubectl apply -f k8s/openldap.yml  -n ${K8S_NS_PROD}
+                        kubectl apply -f k8s/mailhog.yml   -n ${K8S_NS_PROD}
                     """
 
                     sh """
-                        kubectl apply -f k8s/postgres.yml    -n ${K8S_NS_PROD}
-                        kubectl apply -f k8s/neo4j.yml       -n ${K8S_NS_PROD}
-                        kubectl apply -f k8s/kafka.yml       -n ${K8S_NS_PROD}
-                        kubectl apply -f k8s/redis.yml       -n ${K8S_NS_PROD}
-                        kubectl apply -f k8s/openldap.yml    -n ${K8S_NS_PROD}
-                        kubectl apply -f k8s/mailhog.yml     -n ${K8S_NS_PROD}
+                        kubectl rollout status deployment/postgres -n ${K8S_NS_PROD} --timeout=180s || true
+                        kubectl rollout status deployment/neo4j    -n ${K8S_NS_PROD} --timeout=180s || true
+                        kubectl rollout status deployment/kafka    -n ${K8S_NS_PROD} --timeout=180s || true
+                        kubectl rollout status deployment/redis    -n ${K8S_NS_PROD} --timeout=180s || true
                     """
 
-                    sh """
-                        kubectl wait --for=condition=available --timeout=180s \\
-                            deployment --all -n ${K8S_NS_PROD} || true
-                    """
-
+                    // The manifests were already patched in Stage 5 — apply directly
+                    // Application services (6 servicios del alcance del taller)
                     sh """
                         kubectl apply -f k8s/auth-service.yml         -n ${K8S_NS_PROD}
                         kubectl apply -f k8s/identity-service.yml     -n ${K8S_NS_PROD}
@@ -503,7 +508,6 @@ pipeline {
                         kubectl apply -f k8s/promotion-service.yml    -n ${K8S_NS_PROD}
                         kubectl apply -f k8s/notification-service.yml -n ${K8S_NS_PROD}
                         kubectl apply -f k8s/dashboard-service.yml    -n ${K8S_NS_PROD}
-                        kubectl apply -f k8s/gateway-service.yml      -n ${K8S_NS_PROD}
                     """
 
                     sh """
@@ -511,68 +515,149 @@ pipeline {
                         kubectl rollout status deployment/circleguard-identity-service     -n ${K8S_NS_PROD} --timeout=180s
                         kubectl rollout status deployment/circleguard-form-service         -n ${K8S_NS_PROD} --timeout=180s
                         kubectl rollout status deployment/circleguard-promotion-service    -n ${K8S_NS_PROD} --timeout=180s
+                    """
+                    timeout(time: 60, unit: 'SECONDS') {
+                        waitUntil {
+                            def ready = sh(
+                                script: "kubectl get pods -n ${env.K8S_NS_PROD} -l app=circleguard-promotion-service --field-selector=status.phase=Running --no-headers | wc -l",
+                                returnStdout: true
+                            ).trim()
+                            return ready.toInteger() >= 1
+                        }
+                    }
+                    sh """
                         kubectl rollout status deployment/circleguard-notification-service -n ${K8S_NS_PROD} --timeout=180s
                         kubectl rollout status deployment/circleguard-dashboard-service    -n ${K8S_NS_PROD} --timeout=180s
                     """
                 }
             }
+            post {
+                failure { echo 'Stage 8 (Deploy Production) failed — inspect: kubectl get events -n circleguard-prod --sort-by=.lastTimestamp' }
+            }
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // STAGE 9 — RELEASE NOTES  [Main]
+        // STAGE 9 — RELEASE NOTES
         //
-        // Generates RELEASE_NOTES.md from the git log between the previous
-        // annotated tag and HEAD.  writeFile writes the file directly from
-        // Groovy to avoid heredoc escaping issues inside sh steps.
+        // Improvements over original Jenkinsfile:
         //
-        // The stage then creates an annotated git tag so that the next
-        // release's baseline is well-defined.  If the tag already exists
-        // (re-run of the same build), the 2>/dev/null || true suppresses
-        // the non-zero exit without masking real errors.
+        // 1. SEMANTIC VERSION TAG
+        //    Reads the last existing semver tag (v1.2.3) and increments PATCH.
+        //    Falls back to v1.0.0 if no semver tag exists yet.
+        //    Replaces the original release-BUILD_NUMBER scheme.
         //
-        // The artifact is archived so it appears in the Jenkins build page
-        // and is downloadable without needing git access.
+        // 2. CATEGORISED CHANGELOG
+        //    Commits are grouped by conventional commit prefix:
+        //      feat:     → New Features
+        //      fix:      → Bug Fixes
+        //      refactor: → Refactoring
+        //      test:     → Tests
+        //      chore:    → Chores & Config
+        //      (other)   → Other Changes
+        //
+        // 3. TAG IS PUSHED TO ORIGIN
+        //    The original Jenkinsfile created the tag locally but never pushed
+        //    it, then cleanWs() deleted the workspace — so the tag was lost.
+        //    This stage pushes the tag via git-push-credentials.
         // ─────────────────────────────────────────────────────────────────
         stage('Release Notes') {
-            when {
-                branch 'main'
-            }
             steps {
                 script {
+                    // ── Determine baseline (previous tag or first commit) ───────
                     def prevTag = sh(
                         script: "git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD",
                         returnStdout: true
                     ).trim()
 
-                    def releaseTag  = "release-${env.IMAGE_TAG}"
-                    def releaseDate = sh(script: "date -u '+%Y-%m-%d %H:%M UTC'", returnStdout: true).trim()
-                    def commitCount = sh(script: "git log ${prevTag}..HEAD --oneline | wc -l | tr -d ' '", returnStdout: true).trim()
-                    def authors     = sh(script: "git log ${prevTag}..HEAD --format='%an' | sort -u | paste -sd ', ' -", returnStdout: true).trim()
-                    def commitLog   = sh(
-                        script: "git log ${prevTag}..HEAD --pretty=format:'- %s  (%an, %ad)' --date=short",
+                    // ── Compute next semver version (bump PATCH) ────────────────
+                    def lastSemver = sh(
+                        script: "git tag -l 'v*.*.*' | sort -V | tail -1 2>/dev/null || echo ''",
                         returnStdout: true
                     ).trim()
 
+                    def nextVersion
+                    def semverMatch = lastSemver =~ /^v?(\d+)\.(\d+)\.(\d+)$/
+                    if (semverMatch) {
+                        def major = semverMatch[0][1].toInteger()
+                        def minor = semverMatch[0][2].toInteger()
+                        def patch = semverMatch[0][3].toInteger() + 1
+                        nextVersion = "v${major}.${minor}.${patch}"
+                    } else {
+                        nextVersion = 'v1.0.0'
+                    }
+                    def releaseTag = nextVersion
+
+                    // ── Metadata ────────────────────────────────────────────────
+                    def releaseDate = sh(script: "date -u '+%Y-%m-%d %H:%M UTC'", returnStdout: true).trim()
+                    def commitCount = sh(script: "git log ${prevTag}..HEAD --oneline | wc -l | tr -d ' '", returnStdout: true).trim()
+                    def authors     = sh(script: "git log ${prevTag}..HEAD --format='%an' | sort -u | paste -sd ', ' -", returnStdout: true).trim()
+
+                    // ── Categorise commits by conventional prefix ───────────────
+                    def rawLog = sh(
+                        script: "git log ${prevTag}..HEAD --pretty=format:'%s\t%an\t%ad' --date=short",
+                        returnStdout: true
+                    ).trim()
+
+                    def categories = [
+                        [prefix: 'feat',     title: '### New Features'],
+                        [prefix: 'fix',      title: '### Bug Fixes'],
+                        [prefix: 'refactor', title: '### Refactoring'],
+                        [prefix: 'test',     title: '### Tests'],
+                        [prefix: 'chore',    title: '### Chores & Config'],
+                    ]
+                    def buckets = categories.collectEntries { cat -> [(cat.prefix): []] }
+                    def otherEntries = []
+
+                    rawLog.split('\n').each { line ->
+                        if (!line.trim()) return
+                        def parts  = line.split('\t')
+                        def msg    = parts.size() > 0 ? parts[0] : line
+                        def author = parts.size() > 1 ? parts[1] : ''
+                        def date   = parts.size() > 2 ? parts[2] : ''
+                        def entry  = "- ${msg}  _(${author}, ${date})_"
+                        def matched = false
+                        categories.each { cat ->
+                            if (!matched && msg.startsWith("${cat.prefix}:")) {
+                                buckets[cat.prefix] << entry
+                                matched = true
+                            }
+                        }
+                        if (!matched) otherEntries << entry
+                    }
+
+                    def changelogParts = categories
+                        .findAll { cat -> !buckets[cat.prefix].isEmpty() }
+                        .collect { cat -> "${cat.title}\n\n${buckets[cat.prefix].join('\n')}" }
+                    if (otherEntries) {
+                        changelogParts << "### Other Changes\n\n${otherEntries.join('\n')}"
+                    }
+                    def changelog = changelogParts
+                        ? changelogParts.join('\n\n')
+                        : '_No commits since last release_'
+
+                    // ── Docker image list ───────────────────────────────────────
                     def imageLines = ['auth', 'identity', 'form', 'promotion', 'notification', 'dashboard']
-                        .collect { svc -> "- `${env.IMAGE_PREFIX}/circleguard-${svc}-service:${env.IMAGE_TAG}`" }
+                        .collect { svc -> "- \`${env.IMAGE_PREFIX}/circleguard-${svc}-service:${env.IMAGE_TAG}\`" }
                         .join('\n')
 
+                    // ── Write RELEASE_NOTES.md ──────────────────────────────────
                     def noteContent = """\
 # CircleGuard — ${releaseTag}
 
-| Field        | Value                             |
-|--------------|-----------------------------------|
-| Date         | ${releaseDate}                    |
-| Build        | #${env.IMAGE_TAG}                 |
-| Branch       | ${env.BRANCH_NAME}                |
-| Baseline     | ${prevTag}                        |
-| Commits      | ${commitCount}                    |
-| Authors      | ${authors}                        |
-| K8s Namespace| ${env.K8S_NS_PROD}                |
+| Field          | Value                          |
+|----------------|--------------------------------|
+| Version        | ${releaseTag}                  |
+| Date           | ${releaseDate}                 |
+| Build          | #${env.IMAGE_TAG}              |
+| Branch         | ${env.BRANCH_NAME}             |
+| Baseline       | ${prevTag}                     |
+| Commits        | ${commitCount}                 |
+| Authors        | ${authors}                     |
+| K8s Namespace  | ${env.K8S_NS_PROD}             |
 
-## Commits
+## Changelog
 
-${commitLog.isEmpty() ? '_(no commits since baseline)_' : commitLog}
+${changelog}
 
 ## Docker Images
 
@@ -590,42 +675,57 @@ All changes in this release passed:
 """
                     writeFile file: 'RELEASE_NOTES.md', text: noteContent
 
+                    // ── Create annotated tag ────────────────────────────────────
                     sh """
+                        git config user.email "jenkins@ci.local"
+                        git config user.name  "Jenkins CI"
                         git tag -a "${releaseTag}" \\
                             -m "Automated release ${releaseTag} — Jenkins build #${env.IMAGE_TAG}" \\
-                            2>/dev/null || echo "[INFO] Tag ${releaseTag} already exists, skipping."
+                            2>/dev/null || echo "[INFO] Tag ${releaseTag} already exists, skipping creation."
                     """
 
+                    // ── Push tag to origin (was missing in original — tag was lost on cleanWs) ──
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: 'git-push-credentials',
+                            usernameVariable: 'GIT_USER',
+                            passwordVariable: 'GIT_PASS'
+                        )
+                    ]) {
+                        sh """
+                            git push "https://\${GIT_USER}:\${GIT_PASS}@\$(git remote get-url origin | sed 's|https://||')" \\
+                                "${releaseTag}" 2>/dev/null || echo "[INFO] Tag ${releaseTag} already on remote, skipping push."
+                        """
+                    }
+
                     archiveArtifacts artifacts: 'RELEASE_NOTES.md', fingerprint: true
+                    echo "Released ${releaseTag} from build #${env.IMAGE_TAG}."
                 }
+            }
+            post {
+                failure { echo 'Stage 9 (Release Notes) failed — tag may not have been pushed. Verify git-push-credentials and remote access.' }
             }
         }
 
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // POST  — runs after all stages complete regardless of outcome
-    // ─────────────────────────────────────────────────────────────────────
     post {
         success {
             script {
-                def ns = (env.BRANCH_NAME == 'main')  ? env.K8S_NS_PROD
-                       : (env.BRANCH_NAME == 'stage') ? env.K8S_NS_STAGE
-                       : ''
-                def nsInfo = ns ? " — namespace '${ns}'" : ''
-                echo "Build #${env.IMAGE_TAG} succeeded on branch '${env.BRANCH_NAME}'${nsInfo}."
+                echo "Build #${env.IMAGE_TAG} deployed to '${env.K8S_NS_PROD}' and released successfully."
             }
         }
-
         failure {
             script {
-                echo "Build #${env.IMAGE_TAG} FAILED on branch '${env.BRANCH_NAME}'."
-                // Print any non-Running/Completed pods to aid post-mortem
+                echo "Build #${env.IMAGE_TAG} FAILED on branch '${env.BRANCH_NAME}' — notify the team."
+                // TODO: replace the echo below with your notification step
+                // e.g.: slackSend channel: '#circleguard-alerts', color: 'danger',
+                //              message: "Pipeline FAILED: ${env.JOB_NAME} #${env.BUILD_NUMBER}"
                 sh "kubectl get pods --all-namespaces 2>/dev/null | grep -vE '(Running|Completed|Terminating)' || true"
             }
         }
-
         always {
+            sh 'kubectl delete pods --field-selector=status.phase=Failed -n circleguard-stage || true'
             cleanWs()
         }
     }

@@ -1,0 +1,522 @@
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ *  CircleGuard — Jenkinsfile.stage
+ *
+ *  Target branch  : stage
+ *  Jenkins job "Script Path": jenkins/Jenkinsfile.stage
+ *
+ *  Stages:
+ *    1. Checkout
+ *    2. Build Docker Images  (parallel, 6 services)
+ *    3. Unit Tests           (parallel, --continue)
+ *    4. Integration Tests    (--tests '*IT' in auth, promotion, notification)
+ *    5. Deploy → Stage       (kubectl apply → circleguard-stage)
+ *    6. E2E Tests            (port-forward + waitUntil + REST Assured)
+ *    7. Performance — Locust (headless, 20 users, 90 s)
+ *
+ *  Changes vs original Jenkinsfile (stage behaviour):
+ *    • PORT_BASE env var drives all E2E and Locust port-forward ports
+ *    • Infra wait: kubectl rollout status per-deployment (no kubectl wait --all)
+ *    • Deploy limitado a los 6 servicios del alcance (gateway y file excluidos)
+ *    • sleep 8 replaced by waitUntil + nc TCP probe (no fixed sleep)
+ *    • Per-stage post.failure blocks added throughout
+ *    • Global post.always cleans up Failed pods in the stage namespace
+ *
+ *  Required Jenkins credentials  (Manage Jenkins → Credentials → Global):
+ *   ID                        Type                Purpose
+ *   ─────────────────────     ──────────────────  ──────────────────────────
+ *   kubeconfig-file           Secret file         kubeconfig for K8s cluster
+ *   e2e-admin-credentials     Username/Password   admin test account (health_user)
+ *   e2e-user-credentials      Username/Password   regular test account (staff_guard)
+ *
+ *  Required Jenkins plugins:
+ *   pipeline-model-definition  workflow-scm-step  git
+ *   credentials-binding        junit              ws-cleanup
+ * ═══════════════════════════════════════════════════════════════════════════
+ */
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_BUILDKIT = '1'
+        IMAGE_PREFIX    = 'circleguard'
+        IMAGE_TAG       = "${BUILD_NUMBER}"
+        K8S_NS_STAGE    = 'circleguard-stage'
+        KUBECONFIG      = credentials('kubeconfig-file')
+        // Base local port for E2E port-forwards.
+        // E2E ports   = PORT_BASE + (svc_port - 8000)  e.g. 19000 + 180 = 19180
+        // Locust ports = (PORT_BASE - 1000) + (svc_port - 8000)  e.g. 18000 + 180 = 18180
+        PORT_BASE       = '19000'
+    }
+
+    stages {
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 1 — CHECKOUT
+        // ─────────────────────────────────────────────────────────────────
+        stage('Checkout') {
+            steps {
+                checkout scm
+                sh 'git fetch --tags || true'
+            }
+            post {
+                failure { echo 'Stage 1 (Checkout) failed — check SCM configuration and credentials.' }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 2 — BUILD DOCKER IMAGES (parallel, 6 services)
+        // ─────────────────────────────────────────────────────────────────
+        stage('Build Docker Images') {
+            parallel {
+
+                stage('auth-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-auth-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-auth-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-auth-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-auth-service.' }
+                    }
+                }
+
+                stage('identity-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-identity-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-identity-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-identity-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-identity-service.' }
+                    }
+                }
+
+                stage('form-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-form-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-form-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-form-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-form-service.' }
+                    }
+                }
+
+                stage('promotion-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-promotion-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-promotion-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-promotion-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-promotion-service.' }
+                    }
+                }
+
+                stage('notification-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-notification-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-notification-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-notification-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-notification-service.' }
+                    }
+                }
+
+                stage('dashboard-service') {
+                    steps {
+                        sh """
+                            docker build \\
+                                -f services/circleguard-dashboard-service/Dockerfile \\
+                                -t ${IMAGE_PREFIX}/circleguard-dashboard-service:${IMAGE_TAG} \\
+                                -t ${IMAGE_PREFIX}/circleguard-dashboard-service:latest \\
+                                .
+                        """
+                    }
+                    post {
+                        failure { echo 'Build failed: circleguard-dashboard-service.' }
+                    }
+                }
+
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 3 — UNIT TESTS
+        // ─────────────────────────────────────────────────────────────────
+        stage('Unit Tests') {
+            steps {
+                sh """
+                    ./gradlew \\
+                        :services:circleguard-auth-service:test \\
+                        :services:circleguard-identity-service:test \\
+                        :services:circleguard-form-service:test \\
+                        :services:circleguard-promotion-service:test \\
+                        :services:circleguard-notification-service:test \\
+                        :services:circleguard-dashboard-service:test \\
+                        --no-daemon \\
+                        --parallel \\
+                        --continue
+                """
+            }
+            post {
+                always {
+                    junit allowEmptyResults: false,
+                          testResults: '**/build/test-results/test/*.xml'
+                }
+                failure { echo 'Stage 3 (Unit Tests) failed — review JUnit report in Jenkins.' }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 4 — INTEGRATION TESTS
+        //
+        // Runs *IT classes in:
+        //   auth-service        AuthToIdentityHttpIT (WireMock)
+        //   promotion-service   SurveyToSuspectKafkaIT, CertificateApprovedToActiveIT
+        //                       (EmbeddedKafka + Testcontainers)
+        //   notification-service PriorityAlertToAdminEmailIT,
+        //                        CircleFencedRoomCancellationIT (EmbeddedKafka)
+        //
+        // Docker must be accessible on the agent for Testcontainers.
+        // ─────────────────────────────────────────────────────────────────
+        stage('Integration Tests') {
+            steps {
+                sh """
+                    ./gradlew \\
+                        :services:circleguard-auth-service:test \\
+                        :services:circleguard-promotion-service:test \\
+                        :services:circleguard-notification-service:test \\
+                        --tests '*IT' \\
+                        --no-daemon \\
+                        --continue
+                """
+            }
+            post {
+                always {
+                    junit allowEmptyResults: false,
+                          testResults: '**/build/test-results/test/*.xml'
+                }
+                failure { echo 'Stage 4 (Integration Tests) failed — check WireMock / EmbeddedKafka / Testcontainers logs in the build output.' }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 5 — DEPLOY → STAGE
+        //
+        // Applies the full k8s/ manifest set to circleguard-stage.
+        //
+        // Image tag substitution: sed patches workspace copies of the
+        // manifests to replace :latest with :BUILD_NUMBER before apply.
+        //
+        // Infra wait: kubectl rollout status per named deployment (was
+        // kubectl wait --all in original — this avoids waiting on app
+        // deployments that haven't been applied yet if the namespace has
+        // leftovers from a previous run).
+        //
+        // Solo los 6 servicios del alcance del taller.
+        // ─────────────────────────────────────────────────────────────────
+        stage('Deploy → Stage') {
+            steps {
+                script {
+                    sh """
+                        kubectl create namespace ${K8S_NS_STAGE} \\
+                            --dry-run=client -o yaml | kubectl apply -f -
+                    """
+
+                    sh """
+                        for svc in auth identity form promotion notification dashboard; do
+                            sed -i "s|image: circleguard-\${svc}-service:.*|image: ${IMAGE_PREFIX}/circleguard-\${svc}-service:${IMAGE_TAG}|g" \\
+                                k8s/\${svc}-service.yml
+                        done
+                    """
+
+                    // Infrastructure
+                    sh """
+                        kubectl apply -f k8s/postgres.yml  -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/neo4j.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/kafka.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/redis.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/openldap.yml  -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/mailhog.yml   -n ${K8S_NS_STAGE}
+                    """
+
+                    // Wait for infra by named deployment (|| true: some infra may be StatefulSets)
+                    sh """
+                        kubectl rollout status deployment/postgres -n ${K8S_NS_STAGE} --timeout=180s || true
+                        kubectl rollout status deployment/neo4j    -n ${K8S_NS_STAGE} --timeout=180s || true
+                        kubectl rollout status deployment/kafka    -n ${K8S_NS_STAGE} --timeout=180s || true
+                        kubectl rollout status deployment/redis    -n ${K8S_NS_STAGE} --timeout=180s || true
+                    """
+
+                    // Application services (6 servicios del alcance del taller)
+                    sh """
+                        kubectl apply -f k8s/auth-service.yml         -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/identity-service.yml     -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/form-service.yml         -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/promotion-service.yml    -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/notification-service.yml -n ${K8S_NS_STAGE}
+                        kubectl apply -f k8s/dashboard-service.yml    -n ${K8S_NS_STAGE}
+                    """
+
+                    // Wait for each app service rollout individually (no || true — fail-fast)
+                    sh """
+                        kubectl rollout status deployment/circleguard-auth-service         -n ${K8S_NS_STAGE} --timeout=180s
+                        kubectl rollout status deployment/circleguard-identity-service     -n ${K8S_NS_STAGE} --timeout=180s
+                        kubectl rollout status deployment/circleguard-form-service         -n ${K8S_NS_STAGE} --timeout=180s
+                        kubectl rollout status deployment/circleguard-promotion-service    -n ${K8S_NS_STAGE} --timeout=180s
+                    """
+                    timeout(time: 60, unit: 'SECONDS') {
+                        waitUntil {
+                            def ready = sh(
+                                script: "kubectl get pods -n ${env.K8S_NS_STAGE} -l app=circleguard-promotion-service --field-selector=status.phase=Running --no-headers | wc -l",
+                                returnStdout: true
+                            ).trim()
+                            return ready.toInteger() >= 1
+                        }
+                    }
+                    sh """
+                        kubectl rollout status deployment/circleguard-notification-service -n ${K8S_NS_STAGE} --timeout=180s
+                        kubectl rollout status deployment/circleguard-dashboard-service    -n ${K8S_NS_STAGE} --timeout=180s
+                    """
+                }
+            }
+            post {
+                failure { echo 'Stage 5 (Deploy Stage) failed — inspect: kubectl get events -n circleguard-stage --sort-by=.lastTimestamp' }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 6 — E2E TESTS
+        //
+        // Runs the five scenarios in e2e-tests/ against the stage namespace.
+        //
+        // Ports are computed from PORT_BASE (19000 by default):
+        //   auth         PORT_BASE + 180 → 19180
+        //   identity     PORT_BASE + 83  → 19083
+        //   form         PORT_BASE + 86  → 19086
+        //   promotion    PORT_BASE + 88  → 19088
+        //   dashboard    PORT_BASE + 84  → 19084
+        //
+        // Each port-forward is opened in the background, then waitUntil +
+        // nc probes TCP connectivity — no fixed sleep (was sleep 8 in
+        // the original Jenkinsfile, line 342).
+        //
+        // PIDs are written to /tmp so post.always can kill exactly those
+        // processes without touching unrelated port-forwards on the agent.
+        // ─────────────────────────────────────────────────────────────────
+        stage('E2E Tests') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'e2e-user-credentials',
+                        usernameVariable: 'E2E_USER',
+                        passwordVariable: 'E2E_PASS'
+                    ),
+                    usernamePassword(
+                        credentialsId: 'e2e-admin-credentials',
+                        usernameVariable: 'E2E_ADMIN_USER',
+                        passwordVariable: 'E2E_ADMIN_PASS'
+                    )
+                ]) {
+                    script {
+                        def base          = env.PORT_BASE.toInteger()
+                        def pfAuth        = base + 180   // 19180
+                        def pfIdentity    = base + 83    // 19083
+                        def pfForm        = base + 86    // 19086
+                        def pfPromotion   = base + 88    // 19088
+                        def pfDashboard   = base + 84    // 19084
+
+                        withEnv([
+                            "AUTH_SERVICE_URL=http://localhost:${pfAuth}",
+                            "IDENTITY_SERVICE_URL=http://localhost:${pfIdentity}",
+                            "FORM_SERVICE_URL=http://localhost:${pfForm}",
+                            "PROMOTION_SERVICE_URL=http://localhost:${pfPromotion}",
+                            "DASHBOARD_SERVICE_URL=http://localhost:${pfDashboard}"
+                        ]) {
+                            sh """
+                                kubectl port-forward svc/circleguard-auth-service      ${pfAuth}:8180      -n ${K8S_NS_STAGE} &
+                                echo \$! > /tmp/pf_e2e_auth.pid
+                                kubectl port-forward svc/circleguard-identity-service  ${pfIdentity}:8083  -n ${K8S_NS_STAGE} &
+                                echo \$! > /tmp/pf_e2e_identity.pid
+                                kubectl port-forward svc/circleguard-form-service      ${pfForm}:8086      -n ${K8S_NS_STAGE} &
+                                echo \$! > /tmp/pf_e2e_form.pid
+                                kubectl port-forward svc/circleguard-promotion-service ${pfPromotion}:8088 -n ${K8S_NS_STAGE} &
+                                echo \$! > /tmp/pf_e2e_promotion.pid
+                                kubectl port-forward svc/circleguard-dashboard-service ${pfDashboard}:8084 -n ${K8S_NS_STAGE} &
+                                echo \$! > /tmp/pf_e2e_dashboard.pid
+                            """
+
+                            // Wait for each port to accept TCP connections — no fixed sleep
+                            [pfAuth, pfIdentity, pfForm, pfPromotion, pfDashboard].each { port ->
+                                timeout(time: 30, unit: 'SECONDS') {
+                                    waitUntil {
+                                        0 == sh(returnStatus: true,
+                                                script: "nc -z localhost ${port} 2>/dev/null")
+                                    }
+                                }
+                            }
+
+                            try {
+                                sh """
+                                    ./gradlew :e2e-tests:test \\
+                                        --no-daemon
+                                """
+                            } finally {
+                                sh """
+                                    for f in /tmp/pf_e2e_auth.pid /tmp/pf_e2e_identity.pid \\
+                                              /tmp/pf_e2e_form.pid /tmp/pf_e2e_promotion.pid \\
+                                              /tmp/pf_e2e_dashboard.pid; do
+                                        [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
+                                        rm -f "\$f"
+                                    done
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: false,
+                          testResults: 'e2e-tests/build/test-results/test/*.xml'
+                }
+                failure { echo 'Stage 6 (E2E Tests) failed — check REST Assured logs and pod status in circleguard-stage.' }
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // STAGE 7 — PERFORMANCE TESTS — LOCUST
+        //
+        // 90-second headless load test with 20 virtual users.
+        // Locust ports are computed as (PORT_BASE - 1000) + (svc_port - 8000)
+        // to avoid colliding with the E2E stage (which uses PORT_BASE range):
+        //   auth         18180
+        //   form         18086
+        //   dashboard    18084
+        //
+        // --exit-code-on-error 1 blocks the pipeline if Locust records any
+        // HTTP failures, acting as the change-management gate before prod.
+        //
+        // waitUntil + nc replaces the original sleep 8 (line 419).
+        // ─────────────────────────────────────────────────────────────────
+        stage('Performance Tests — Locust') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'e2e-user-credentials',
+                        usernameVariable: 'E2E_USER',
+                        passwordVariable: 'E2E_PASS'
+                    )
+                ]) {
+                    script {
+                        def locBase     = env.PORT_BASE.toInteger() - 1000   // 18000
+                        def pfLocAuth   = locBase + 180   // 18180
+                        def pfLocForm   = locBase + 86    // 18086
+                        def pfLocDash   = locBase + 84    // 18084
+
+                        withEnv([
+                            "AUTH_SERVICE_URL=http://localhost:${pfLocAuth}",
+                            "FORM_SERVICE_URL=http://localhost:${pfLocForm}",
+                            "DASHBOARD_SERVICE_URL=http://localhost:${pfLocDash}"
+                        ]) {
+                            sh """
+                                kubectl port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} &
+                                echo \$! > /tmp/pf_locust_auth.pid
+                                kubectl port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} &
+                                echo \$! > /tmp/pf_locust_form.pid
+                                kubectl port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} &
+                                echo \$! > /tmp/pf_locust_dashboard.pid
+                            """
+
+                            // Wait for each port to accept TCP connections — no fixed sleep
+                            [pfLocAuth, pfLocForm, pfLocDash].each { port ->
+                                timeout(time: 30, unit: 'SECONDS') {
+                                    waitUntil {
+                                        0 == sh(returnStatus: true,
+                                                script: "nc -z localhost ${port} 2>/dev/null")
+                                    }
+                                }
+                            }
+
+                            try {
+                                sh """
+                                    mkdir -p locust/reports
+                                    pip install -q -r locust/requirements.txt
+
+                                    locust \\
+                                        --locustfile locust/locustfile.py \\
+                                        --headless \\
+                                        --users 20 \\
+                                        --spawn-rate 4 \\
+                                        --run-time 90s \\
+                                        --csv locust/reports/circleguard \\
+                                        --csv-full-history \\
+                                        --html locust/reports/report.html \\
+                                        --exit-code-on-error 1
+                                """
+                            } finally {
+                                sh """
+                                    for f in /tmp/pf_locust_auth.pid /tmp/pf_locust_form.pid \\
+                                              /tmp/pf_locust_dashboard.pid; do
+                                        [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
+                                        rm -f "\$f"
+                                    done
+                                """
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts allowEmptyArchive: true,
+                                     artifacts: 'locust/reports/**',
+                                     fingerprint: true
+                }
+                failure { echo 'Stage 7 (Performance Tests) failed — Locust detected HTTP failures. Check locust/reports/circleguard_failures.csv.' }
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo "Stage build #${env.IMAGE_TAG} passed all gates in namespace '${env.K8S_NS_STAGE}'."
+        }
+        failure {
+            script {
+                echo "Stage build #${env.IMAGE_TAG} FAILED — namespace '${env.K8S_NS_STAGE}' may be in a degraded state."
+                sh "kubectl get pods -n ${env.K8S_NS_STAGE} 2>/dev/null | grep -vE '(Running|Completed|Terminating)' || true"
+            }
+        }
+        always {
+            // Remove pods stuck in Failed phase so the next run starts clean
+            sh 'kubectl delete pods --field-selector=status.phase=Failed -n circleguard-stage || true'
+            cleanWs()
+        }
+    }
+}
