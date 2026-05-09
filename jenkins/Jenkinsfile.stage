@@ -327,7 +327,7 @@ pipeline {
                         "DASHBOARD_SERVICE_URL=http://localhost:30084"
                     ]) {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            bat "gradlew.bat :e2e-tests:test --no-daemon --continue"
+                            bat "cmd /c \"%WORKSPACE%\\gradlew.bat :e2e-tests:test --no-daemon --continue\""
                         }
                     }
                 }
