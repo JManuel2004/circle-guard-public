@@ -381,14 +381,17 @@ pipeline {
                             "FORM_SERVICE_URL=http://localhost:${pfLocForm}",
                             "DASHBOARD_SERVICE_URL=http://localhost:${pfLocDash}"
                         ]) {
-                            sh """
-                                kubectl port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_locust_auth.pid
-                                kubectl port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_locust_form.pid
-                                kubectl port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_locust_dashboard.pid
-                            """
+                            withKubeConfig([credentialsId: 'kubeconfig-file',
+                                            serverUrl:     'https://kubernetes.docker.internal:6443']) {
+                                sh """
+                                    ${KUBECTL} port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} &
+                                    echo \$! > /tmp/pf_locust_auth.pid
+                                    ${KUBECTL} port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} &
+                                    echo \$! > /tmp/pf_locust_form.pid
+                                    ${KUBECTL} port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} &
+                                    echo \$! > /tmp/pf_locust_dashboard.pid
+                                """
+                            }
 
                             // Wait for each port to accept TCP connections — no fixed sleep
                             [pfLocAuth, pfLocForm, pfLocDash].each { port ->
