@@ -484,6 +484,9 @@ pipeline {
                 withKubeConfig([credentialsId: 'kubeconfig-file',
                                 serverUrl:     'https://kubernetes.docker.internal:6443']) {
                     script {
+                        // NodePorts are cluster-wide — delete stage namespace first to free them
+                        sh "${KUBECTL} delete namespace ${K8S_NS_STAGE} --ignore-not-found=true"
+
                         sh """
                             ${KUBECTL} create namespace ${K8S_NS_PROD} \\
                                 --dry-run=client -o yaml | ${KUBECTL} apply --validate=false -f -
