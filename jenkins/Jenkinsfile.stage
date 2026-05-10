@@ -400,7 +400,7 @@ pipeline {
 
                                         for port in ${pfLocAuth} ${pfLocForm} ${pfLocDash}; do
                                             i=0
-                                            until nc -z 127.0.0.1 \$port 2>/dev/null; do
+                                            until (echo > /dev/tcp/127.0.0.1/\$port) 2>/dev/null; do
                                                 i=\$((i + 1))
                                                 if [ \$i -ge 30 ]; then
                                                     echo "=== Timeout waiting for port \$port. Port-forward logs: ==="
