@@ -413,7 +413,8 @@ pipeline {
 
                                         mkdir -p locust/reports
                                         if ! command -v pip3 &>/dev/null; then
-                                            apt-get install -y -q python3-pip
+                                            apt-get update -qq && apt-get install -y -q python3-pip || \
+                                            curl -sSL https://bootstrap.pypa.io/get-pip.py | python3
                                         fi
                                         pip3 install -q -r locust/requirements.txt
                                         locust \\
