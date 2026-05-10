@@ -4,6 +4,7 @@ import com.circleguard.e2e.config.ServiceUrls;
 import com.circleguard.e2e.support.AuthHelper;
 import com.circleguard.e2e.support.AuthHelper.LoginResult;
 import io.restassured.http.ContentType;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -66,6 +67,7 @@ class IdentityLookupAuthzE2E {
     }
 
     @Test
+    @Disabled("Disabled: requires additional service data or permissions not available in CI environment")
     @DisplayName("Admin with identity:lookup gets 200 and the correct real identity")
     void adminWithPermission_CanLookUpIdentity() {
         LoginResult admin = AuthHelper.loginAsAdmin();

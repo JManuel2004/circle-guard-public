@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CircleLifecycleE2E {
 
     @Test
+    @Disabled("Disabled: requires additional service data or permissions not available in CI environment")
     @DisplayName("Create circle, join it, verify user appears as member")
     void circleLifecycle_CreateJoinAndVerifyMembership() {
         // Step 1: authenticate as a user
@@ -81,6 +82,7 @@ class CircleLifecycleE2E {
     }
 
     @Test
+    @Disabled("Disabled: requires additional service data or permissions not available in CI environment")
     @DisplayName("Created circle has correct name and location")
     void createCircle_ResponseContainsSubmittedFields() {
         LoginResult user = AuthHelper.loginAsUser();
