@@ -577,9 +577,9 @@ pipeline {
                 script {
                     // ── Determine baseline (previous tag or first commit) ───────
                     def prevTag = sh(
-                        script: "git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD",
+                        script: "git describe --tags --abbrev=0 HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD | head -1",
                         returnStdout: true
-                    ).trim()
+                    ).trim().split('\n')[0].trim()
 
                     // ── Compute next semver version (bump PATCH) ────────────────
                     def lastSemver = sh(
