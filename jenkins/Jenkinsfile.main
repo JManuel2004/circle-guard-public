@@ -646,7 +646,7 @@ pipeline {
 
                     // ── Docker image list ───────────────────────────────────────
                     def imageLines = ['auth', 'identity', 'form', 'promotion', 'notification', 'dashboard']
-                        .collect { svc -> "- \`${env.IMAGE_PREFIX}/circleguard-${svc}-service:${env.IMAGE_TAG}\`" }
+                        .collect { svc -> "- `${env.IMAGE_PREFIX}/circleguard-${svc}-service:${env.IMAGE_TAG}`" }
                         .join('\n')
 
                     // ── Write RELEASE_NOTES.md ──────────────────────────────────
