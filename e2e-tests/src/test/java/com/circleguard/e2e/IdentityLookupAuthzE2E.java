@@ -32,11 +32,11 @@ class IdentityLookupAuthzE2E {
 
     private static final String TARGET_IDENTITY = "lookup-target@university.edu";
 
-    /** Creates the mapping and returns its anonymousId. Requires a valid authenticated requester. */
-    private UUID ensureMapping(String realIdentity, LoginResult requester) {
+    /** Creates the mapping and returns its anonymousId. /map is permitAll — no auth header needed. */
+    private UUID ensureMapping(String realIdentity) {
         return given()
                 .baseUri(ServiceUrls.IDENTITY)
-                .spec(requester.authenticated())
+                .contentType(ContentType.JSON)
                 .body("""
                       {"realIdentity": "%s"}
                       """.formatted(realIdentity))
@@ -50,8 +50,7 @@ class IdentityLookupAuthzE2E {
     @Test
     @DisplayName("Regular user without identity:lookup gets 401 or 403 on lookup endpoint")
     void regularUser_CannotLookUpIdentity() {
-        LoginResult admin = AuthHelper.loginAsAdmin();
-        UUID anonymousId = ensureMapping(TARGET_IDENTITY, admin);
+        UUID anonymousId = ensureMapping(TARGET_IDENTITY);
         LoginResult user = AuthHelper.loginAsUser();
 
         int status = given()
@@ -71,7 +70,7 @@ class IdentityLookupAuthzE2E {
     @DisplayName("Admin with identity:lookup gets 200 and the correct real identity")
     void adminWithPermission_CanLookUpIdentity() {
         LoginResult admin = AuthHelper.loginAsAdmin();
-        UUID anonymousId = ensureMapping(TARGET_IDENTITY, admin);
+        UUID anonymousId = ensureMapping(TARGET_IDENTITY);
 
         String resolvedIdentity = given()
                 .baseUri(ServiceUrls.IDENTITY)
@@ -89,8 +88,7 @@ class IdentityLookupAuthzE2E {
     @Test
     @DisplayName("Unauthenticated request to lookup is rejected with 401 or 403")
     void unauthenticated_CannotLookUpIdentity() {
-        LoginResult admin = AuthHelper.loginAsAdmin();
-        UUID anonymousId = ensureMapping("noauth-test@university.edu", admin);
+        UUID anonymousId = ensureMapping("noauth-test@university.edu");
 
         int status = given()
                 .baseUri(ServiceUrls.IDENTITY)
