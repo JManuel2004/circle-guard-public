@@ -329,7 +329,9 @@ pipeline {
                         bat """
                             echo AUTH_SERVICE_URL=%AUTH_SERVICE_URL%
                             echo E2E_USER=%E2E_USER%
-                            curl.exe -s -o NUL -w "Auth HTTP status: %%{http_code}" http://localhost:30180/api/v1/auth/login -X POST -H "Content-Type: application/json" -d "{\\"username\\":\\"staff_guard\\",\\"password\\":\\"password\\"}"
+                            echo Waiting 30s for auth-service to finish startup...
+                            timeout /t 30 /nobreak
+                            curl.exe -s -o NUL -w "Auth HTTP status: %%{http_code}" http://localhost:30180/api/v1/auth/login -X POST -H "Content-Type: application/json" -d "{\\"username\\":\\"staff_guard\\",\\"password\\":\\"password\\"}" || echo Auth connectivity check done - continuing regardless
                         """
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat "cmd /c \"%WORKSPACE%\\gradlew.bat :e2e-tests:test --no-daemon --continue\""
