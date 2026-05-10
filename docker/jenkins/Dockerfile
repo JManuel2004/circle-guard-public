@@ -27,4 +27,9 @@ RUN groupadd -f docker && usermod -aG docker jenkins
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
+# Fix git safe.directory: git 2.35.2+ rejects repos owned by a different UID.
+# Uses --system so it applies to all users regardless of HOME (which is the
+# mounted volume /var/jenkins_home at runtime, not /home/jenkins from build).
+RUN git config --system --add safe.directory '*'
+
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
