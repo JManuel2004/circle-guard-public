@@ -271,7 +271,7 @@ pipeline {
                         """
 
                         sh """
-                            ${KUBECTL} rollout status deployment/circleguard-auth-service         -n ${K8S_NS_STAGE} --timeout=180s
+                            ${KUBECTL} rollout status deployment/circleguard-auth-service         -n ${K8S_NS_STAGE} --timeout=300s
                             ${KUBECTL} rollout status deployment/circleguard-identity-service     -n ${K8S_NS_STAGE} --timeout=180s
                             ${KUBECTL} rollout status deployment/circleguard-form-service         -n ${K8S_NS_STAGE} --timeout=180s
                             ${KUBECTL} rollout status deployment/circleguard-promotion-service    -n ${K8S_NS_STAGE} --timeout=300s
@@ -516,7 +516,7 @@ pipeline {
                         """
 
                         sh """
-                            ${KUBECTL} rollout status deployment/circleguard-auth-service         -n ${K8S_NS_PROD} --timeout=180s
+                            ${KUBECTL} rollout status deployment/circleguard-auth-service         -n ${K8S_NS_PROD} --timeout=300s
                             ${KUBECTL} rollout status deployment/circleguard-identity-service     -n ${K8S_NS_PROD} --timeout=180s
                             ${KUBECTL} rollout status deployment/circleguard-form-service         -n ${K8S_NS_PROD} --timeout=180s
                             ${KUBECTL} rollout status deployment/circleguard-promotion-service    -n ${K8S_NS_PROD} --timeout=300s
