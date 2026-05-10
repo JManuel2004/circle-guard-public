@@ -332,42 +332,40 @@ pipeline {
                             "PROMOTION_SERVICE_URL=http://localhost:${pfPromotion}",
                             "DASHBOARD_SERVICE_URL=http://localhost:${pfDashboard}"
                         ]) {
-                            sh """
-                                kubectl port-forward svc/circleguard-auth-service      ${pfAuth}:8180      -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_auth.pid
-                                kubectl port-forward svc/circleguard-identity-service  ${pfIdentity}:8083  -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_identity.pid
-                                kubectl port-forward svc/circleguard-form-service      ${pfForm}:8086      -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_form.pid
-                                kubectl port-forward svc/circleguard-promotion-service ${pfPromotion}:8088 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_promotion.pid
-                                kubectl port-forward svc/circleguard-dashboard-service ${pfDashboard}:8084 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_e2e_dashboard.pid
-                            """
+                            withKubeConfig([credentialsId: 'kubeconfig-file',
+                                            serverUrl:     'https://kubernetes.docker.internal:6443']) {
+                                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                                    sh """#!/bin/bash
+                                        set -euo pipefail
 
-                            [pfAuth, pfIdentity, pfForm, pfPromotion, pfDashboard].each { port ->
-                                timeout(time: 30, unit: 'SECONDS') {
-                                    waitUntil {
-                                        0 == sh(returnStatus: true,
-                                                script: "nc -z localhost ${port} 2>/dev/null")
-                                    }
+                                        ${KUBECTL} port-forward svc/circleguard-auth-service      ${pfAuth}:8180      -n ${K8S_NS_STAGE} > /tmp/pf_e2e_auth.log 2>&1 &
+                                        PF1=\$!
+                                        ${KUBECTL} port-forward svc/circleguard-identity-service  ${pfIdentity}:8083  -n ${K8S_NS_STAGE} > /tmp/pf_e2e_identity.log 2>&1 &
+                                        PF2=\$!
+                                        ${KUBECTL} port-forward svc/circleguard-form-service      ${pfForm}:8086      -n ${K8S_NS_STAGE} > /tmp/pf_e2e_form.log 2>&1 &
+                                        PF3=\$!
+                                        ${KUBECTL} port-forward svc/circleguard-promotion-service ${pfPromotion}:8088 -n ${K8S_NS_STAGE} > /tmp/pf_e2e_promotion.log 2>&1 &
+                                        PF4=\$!
+                                        ${KUBECTL} port-forward svc/circleguard-dashboard-service ${pfDashboard}:8084 -n ${K8S_NS_STAGE} > /tmp/pf_e2e_dashboard.log 2>&1 &
+                                        PF5=\$!
+                                        trap 'kill \$PF1 \$PF2 \$PF3 \$PF4 \$PF5 2>/dev/null || true' EXIT
+
+                                        for port in ${pfAuth} ${pfIdentity} ${pfForm} ${pfPromotion} ${pfDashboard}; do
+                                            i=0
+                                            until (echo > /dev/tcp/127.0.0.1/\$port) 2>/dev/null; do
+                                                i=\$((i + 1))
+                                                if [ \$i -ge 30 ]; then
+                                                    echo "=== Timeout waiting for port \$port. Port-forward logs: ==="
+                                                    cat /tmp/pf_e2e_auth.log /tmp/pf_e2e_identity.log /tmp/pf_e2e_form.log /tmp/pf_e2e_promotion.log /tmp/pf_e2e_dashboard.log 2>/dev/null || true
+                                                    exit 1
+                                                fi
+                                                sleep 1
+                                            done
+                                        done
+
+                                        ./gradlew :e2e-tests:cleanTest :e2e-tests:test --no-daemon
+                                    """
                                 }
-                            }
-
-                            try {
-                                sh """
-                                    ./gradlew :e2e-tests:test \\
-                                        --no-daemon
-                                """
-                            } finally {
-                                sh """
-                                    for f in /tmp/pf_e2e_auth.pid /tmp/pf_e2e_identity.pid \\
-                                              /tmp/pf_e2e_form.pid /tmp/pf_e2e_promotion.pid \\
-                                              /tmp/pf_e2e_dashboard.pid; do
-                                        [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
-                                        rm -f "\$f"
-                                    done
-                                """
                             }
                         }
                     }
@@ -375,6 +373,7 @@ pipeline {
             }
             post {
                 always {
+                    sh 'pkill -f "kubectl.*port-forward.*circleguard-stage" || true'
                     junit allowEmptyResults: false,
                           testResults: 'e2e-tests/build/test-results/test/*.xml'
                 }
@@ -409,48 +408,51 @@ pipeline {
                             "FORM_SERVICE_URL=http://localhost:${pfLocForm}",
                             "DASHBOARD_SERVICE_URL=http://localhost:${pfLocDash}"
                         ]) {
-                            sh """
-                                kubectl port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_locust_auth.pid
-                                kubectl port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_locust_form.pid
-                                kubectl port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} &
-                                echo \$! > /tmp/pf_locust_dashboard.pid
-                            """
+                            withKubeConfig([credentialsId: 'kubeconfig-file',
+                                            serverUrl:     'https://kubernetes.docker.internal:6443']) {
+                                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                                    sh """#!/bin/bash
+                                        set -euo pipefail
 
-                            [pfLocAuth, pfLocForm, pfLocDash].each { port ->
-                                timeout(time: 30, unit: 'SECONDS') {
-                                    waitUntil {
-                                        0 == sh(returnStatus: true,
-                                                script: "nc -z localhost ${port} 2>/dev/null")
-                                    }
+                                        ${KUBECTL} port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} > /tmp/pf_loc_auth.log 2>&1 &
+                                        PF1=\$!
+                                        ${KUBECTL} port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} > /tmp/pf_loc_form.log 2>&1 &
+                                        PF2=\$!
+                                        ${KUBECTL} port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} > /tmp/pf_loc_dash.log 2>&1 &
+                                        PF3=\$!
+                                        trap 'kill \$PF1 \$PF2 \$PF3 2>/dev/null || true' EXIT
+
+                                        for port in ${pfLocAuth} ${pfLocForm} ${pfLocDash}; do
+                                            i=0
+                                            until (echo > /dev/tcp/127.0.0.1/\$port) 2>/dev/null; do
+                                                i=\$((i + 1))
+                                                if [ \$i -ge 30 ]; then
+                                                    echo "=== Timeout waiting for port \$port. Port-forward logs: ==="
+                                                    cat /tmp/pf_loc_auth.log /tmp/pf_loc_form.log /tmp/pf_loc_dash.log 2>/dev/null || true
+                                                    exit 1
+                                                fi
+                                                sleep 1
+                                            done
+                                        done
+
+                                        mkdir -p locust/reports
+                                        if ! command -v pip3 &>/dev/null; then
+                                            apt-get update -qq && apt-get install -y -q python3-pip || \
+                                            curl -sSL https://bootstrap.pypa.io/get-pip.py | python3
+                                        fi
+                                        pip3 install -q --break-system-packages -r locust/requirements.txt
+                                        locust \\
+                                            --locustfile locust/locustfile.py \\
+                                            --headless \\
+                                            --users 20 \\
+                                            --spawn-rate 4 \\
+                                            --run-time 90s \\
+                                            --csv locust/reports/circleguard \\
+                                            --csv-full-history \\
+                                            --html locust/reports/report.html \\
+                                            --exit-code-on-error 1
+                                    """
                                 }
-                            }
-
-                            try {
-                                sh """
-                                    mkdir -p locust/reports
-                                    pip install -q -r locust/requirements.txt
-
-                                    locust \\
-                                        --locustfile locust/locustfile.py \\
-                                        --headless \\
-                                        --users 20 \\
-                                        --spawn-rate 4 \\
-                                        --run-time 90s \\
-                                        --csv locust/reports/circleguard \\
-                                        --csv-full-history \\
-                                        --html locust/reports/report.html \\
-                                        --exit-code-on-error 1
-                                """
-                            } finally {
-                                sh """
-                                    for f in /tmp/pf_locust_auth.pid /tmp/pf_locust_form.pid \\
-                                              /tmp/pf_locust_dashboard.pid; do
-                                        [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
-                                        rm -f "\$f"
-                                    done
-                                """
                             }
                         }
                     }
@@ -458,6 +460,7 @@ pipeline {
             }
             post {
                 always {
+                    sh 'pkill -f "kubectl.*port-forward.*circleguard-stage" || true'
                     archiveArtifacts allowEmptyArchive: true,
                                      artifacts: 'locust/reports/**',
                                      fingerprint: true
