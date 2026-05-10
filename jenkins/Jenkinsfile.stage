@@ -412,7 +412,10 @@ pipeline {
                                         done
 
                                         mkdir -p locust/reports
-                                        pip install -q -r locust/requirements.txt
+                                        if ! command -v pip3 &>/dev/null; then
+                                            apt-get install -y -q python3-pip
+                                        fi
+                                        pip3 install -q -r locust/requirements.txt
                                         locust \\
                                             --locustfile locust/locustfile.py \\
                                             --headless \\
