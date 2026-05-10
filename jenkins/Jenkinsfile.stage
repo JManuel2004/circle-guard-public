@@ -381,47 +381,43 @@ pipeline {
                             "FORM_SERVICE_URL=http://localhost:${pfLocForm}",
                             "DASHBOARD_SERVICE_URL=http://localhost:${pfLocDash}"
                         ]) {
+                            // Single sh block keeps withKubeConfig alive for the entire run.
+                            // Port-forwards are children of this shell; trap guarantees
+                            // cleanup on exit regardless of locust's exit code.
                             withKubeConfig([credentialsId: 'kubeconfig-file',
                                             serverUrl:     'https://kubernetes.docker.internal:6443']) {
-                                // Copy the temporary kubeconfig to a stable path so the
-                                // background port-forward processes can still read it after
-                                // withKubeConfig cleans up the original temp file.
-                                // JENKINS_NODE_COOKIE=dontKillMe prevents the Process Tree
-                                // Killer from terminating them when the sh block exits.
-                                sh """
-                                    cp \$KUBECONFIG /tmp/locust-kubeconfig
-                                    KUBECONFIG=/tmp/locust-kubeconfig JENKINS_NODE_COOKIE=dontKillMe nohup ${KUBECTL} port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} > /dev/null 2>&1 &
-                                    KUBECONFIG=/tmp/locust-kubeconfig JENKINS_NODE_COOKIE=dontKillMe nohup ${KUBECTL} port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} > /dev/null 2>&1 &
-                                    KUBECONFIG=/tmp/locust-kubeconfig JENKINS_NODE_COOKIE=dontKillMe nohup ${KUBECTL} port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} > /dev/null 2>&1 &
-                                """
-                            }
+                                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                                    sh """
+                                        ${KUBECTL} port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} &
+                                        PF1=\$!
+                                        ${KUBECTL} port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} &
+                                        PF2=\$!
+                                        ${KUBECTL} port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} &
+                                        PF3=\$!
+                                        trap 'kill \$PF1 \$PF2 \$PF3 2>/dev/null || true' EXIT
 
-                            // Wait for each port to accept TCP connections — no fixed sleep
-                            [pfLocAuth, pfLocForm, pfLocDash].each { port ->
-                                timeout(time: 30, unit: 'SECONDS') {
-                                    waitUntil {
-                                        0 == sh(returnStatus: true,
-                                                script: "nc -z localhost ${port} 2>/dev/null")
-                                    }
+                                        for port in ${pfLocAuth} ${pfLocForm} ${pfLocDash}; do
+                                            deadline=\$((SECONDS + 30))
+                                            until nc -z 127.0.0.1 \$port 2>/dev/null; do
+                                                [ \$SECONDS -ge \$deadline ] && { echo "Timeout waiting for port \$port"; exit 1; }
+                                                sleep 1
+                                            done
+                                        done
+
+                                        mkdir -p locust/reports
+                                        pip install -q -r locust/requirements.txt
+                                        locust \\
+                                            --locustfile locust/locustfile.py \\
+                                            --headless \\
+                                            --users 20 \\
+                                            --spawn-rate 4 \\
+                                            --run-time 90s \\
+                                            --csv locust/reports/circleguard \\
+                                            --csv-full-history \\
+                                            --html locust/reports/report.html \\
+                                            --exit-code-on-error 1
+                                    """
                                 }
-                            }
-
-                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                                sh """
-                                    mkdir -p locust/reports
-                                    pip install -q -r locust/requirements.txt
-
-                                    locust \\
-                                        --locustfile locust/locustfile.py \\
-                                        --headless \\
-                                        --users 20 \\
-                                        --spawn-rate 4 \\
-                                        --run-time 90s \\
-                                        --csv locust/reports/circleguard \\
-                                        --csv-full-history \\
-                                        --html locust/reports/report.html \\
-                                        --exit-code-on-error 1
-                                """
                             }
                         }
                     }
@@ -429,7 +425,7 @@ pipeline {
             }
             post {
                 always {
-                    sh 'pkill -f "kubectl.*port-forward.*circleguard-stage" || true; rm -f /tmp/locust-kubeconfig'
+                    sh 'pkill -f "kubectl.*port-forward.*circleguard-stage" || true'
                     archiveArtifacts allowEmptyArchive: true,
                                      artifacts: 'locust/reports/**',
                                      fingerprint: true
