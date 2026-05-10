@@ -588,12 +588,9 @@ pipeline {
                     ).trim()
 
                     def nextVersion
-                    def semverMatch = lastSemver =~ /^v?(\d+)\.(\d+)\.(\d+)$/
-                    if (semverMatch) {
-                        def major = semverMatch[0][1].toInteger()
-                        def minor = semverMatch[0][2].toInteger()
-                        def patch = semverMatch[0][3].toInteger() + 1
-                        nextVersion = "v${major}.${minor}.${patch}"
+                    if (lastSemver ==~ /^v?\d+\.\d+\.\d+$/) {
+                        def parts = lastSemver.replaceAll('^v', '').split('\\.')
+                        nextVersion = "v${parts[0]}.${parts[1]}.${parts[2].toInteger() + 1}"
                     } else {
                         nextVersion = 'v1.0.0'
                     }
