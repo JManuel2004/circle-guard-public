@@ -387,19 +387,26 @@ pipeline {
                             withKubeConfig([credentialsId: 'kubeconfig-file',
                                             serverUrl:     'https://kubernetes.docker.internal:6443']) {
                                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                                    sh """
-                                        ${KUBECTL} port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} &
+                                    sh """#!/bin/bash
+                                        set -euo pipefail
+
+                                        ${KUBECTL} port-forward svc/circleguard-auth-service      ${pfLocAuth}:8180 -n ${K8S_NS_STAGE} > /tmp/pf_auth.log 2>&1 &
                                         PF1=\$!
-                                        ${KUBECTL} port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} &
+                                        ${KUBECTL} port-forward svc/circleguard-form-service      ${pfLocForm}:8086 -n ${K8S_NS_STAGE} > /tmp/pf_form.log 2>&1 &
                                         PF2=\$!
-                                        ${KUBECTL} port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} &
+                                        ${KUBECTL} port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} > /tmp/pf_dash.log 2>&1 &
                                         PF3=\$!
                                         trap 'kill \$PF1 \$PF2 \$PF3 2>/dev/null || true' EXIT
 
                                         for port in ${pfLocAuth} ${pfLocForm} ${pfLocDash}; do
-                                            deadline=\$((SECONDS + 30))
+                                            i=0
                                             until nc -z 127.0.0.1 \$port 2>/dev/null; do
-                                                [ \$SECONDS -ge \$deadline ] && { echo "Timeout waiting for port \$port"; exit 1; }
+                                                i=\$((i + 1))
+                                                if [ \$i -ge 30 ]; then
+                                                    echo "=== Timeout waiting for port \$port. Port-forward logs: ==="
+                                                    cat /tmp/pf_auth.log /tmp/pf_form.log /tmp/pf_dash.log 2>/dev/null || true
+                                                    exit 1
+                                                fi
                                                 sleep 1
                                             done
                                         done
