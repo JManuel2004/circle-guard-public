@@ -20,6 +20,18 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8086
+          readinessProbe:
+            tcpSocket:
+              port: 8086
+            initialDelaySeconds: 45
+            periodSeconds: 5
+            failureThreshold: 20
+          livenessProbe:
+            tcpSocket:
+              port: 8086
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            failureThreshold: 5
           env:
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://postgres:5432/circleguard_form"
