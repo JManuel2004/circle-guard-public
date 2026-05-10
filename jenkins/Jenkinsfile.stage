@@ -334,7 +334,7 @@ pipeline {
                             curl.exe -s -o NUL -w "Auth HTTP status: %%{http_code}" http://localhost:30180/api/v1/auth/login -X POST -H "Content-Type: application/json" -d "{\\"username\\":\\"staff_guard\\",\\"password\\":\\"password\\"}" || echo Auth connectivity check done - continuing regardless
                         """
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            bat "cmd /c \"%WORKSPACE%\\gradlew.bat :e2e-tests:test --no-daemon --continue\""
+                            bat "cmd /c \"%WORKSPACE%\\gradlew.bat :e2e-tests:cleanTest :e2e-tests:test --no-daemon --continue\""
                         }
                     }
                 }
@@ -381,6 +381,8 @@ pipeline {
                             "FORM_SERVICE_URL=http://localhost:${pfLocForm}",
                             "DASHBOARD_SERVICE_URL=http://localhost:${pfLocDash}"
                         ]) {
+                            // withKubeConfig stays open for the full duration so the
+                            // background port-forward processes keep their kubeconfig.
                             withKubeConfig([credentialsId: 'kubeconfig-file',
                                             serverUrl:     'https://kubernetes.docker.internal:6443']) {
                                 sh """
@@ -391,43 +393,43 @@ pipeline {
                                     ${KUBECTL} port-forward svc/circleguard-dashboard-service ${pfLocDash}:8084 -n ${K8S_NS_STAGE} &
                                     echo \$! > /tmp/pf_locust_dashboard.pid
                                 """
-                            }
 
-                            // Wait for each port to accept TCP connections — no fixed sleep
-                            [pfLocAuth, pfLocForm, pfLocDash].each { port ->
-                                timeout(time: 30, unit: 'SECONDS') {
-                                    waitUntil {
-                                        0 == sh(returnStatus: true,
-                                                script: "nc -z localhost ${port} 2>/dev/null")
+                                // Wait for each port to accept TCP connections — no fixed sleep
+                                [pfLocAuth, pfLocForm, pfLocDash].each { port ->
+                                    timeout(time: 30, unit: 'SECONDS') {
+                                        waitUntil {
+                                            0 == sh(returnStatus: true,
+                                                    script: "nc -z localhost ${port} 2>/dev/null")
+                                        }
                                     }
                                 }
-                            }
 
-                            catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                                try {
-                                    sh """
-                                        mkdir -p locust/reports
-                                        pip install -q -r locust/requirements.txt
+                                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                                    try {
+                                        sh """
+                                            mkdir -p locust/reports
+                                            pip install -q -r locust/requirements.txt
 
-                                        locust \\
-                                            --locustfile locust/locustfile.py \\
-                                            --headless \\
-                                            --users 20 \\
-                                            --spawn-rate 4 \\
-                                            --run-time 90s \\
-                                            --csv locust/reports/circleguard \\
-                                            --csv-full-history \\
-                                            --html locust/reports/report.html \\
-                                            --exit-code-on-error 1
-                                    """
-                                } finally {
-                                    sh """
-                                        for f in /tmp/pf_locust_auth.pid /tmp/pf_locust_form.pid \\
-                                                  /tmp/pf_locust_dashboard.pid; do
-                                            [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
-                                            rm -f "\$f"
-                                        done
-                                    """
+                                            locust \\
+                                                --locustfile locust/locustfile.py \\
+                                                --headless \\
+                                                --users 20 \\
+                                                --spawn-rate 4 \\
+                                                --run-time 90s \\
+                                                --csv locust/reports/circleguard \\
+                                                --csv-full-history \\
+                                                --html locust/reports/report.html \\
+                                                --exit-code-on-error 1
+                                        """
+                                    } finally {
+                                        sh """
+                                            for f in /tmp/pf_locust_auth.pid /tmp/pf_locust_form.pid \\
+                                                      /tmp/pf_locust_dashboard.pid; do
+                                                [ -f "\$f" ] && kill "\$(cat \$f)" 2>/dev/null || true
+                                                rm -f "\$f"
+                                            done
+                                        """
+                                    }
                                 }
                             }
                         }
