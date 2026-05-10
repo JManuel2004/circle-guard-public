@@ -31,11 +31,11 @@ class IdentityLookupAuthzE2E {
 
     private static final String TARGET_IDENTITY = "lookup-target@university.edu";
 
-    /** Creates the mapping and returns its anonymousId. */
-    private UUID ensureMapping(String realIdentity) {
+    /** Creates the mapping and returns its anonymousId. Requires a valid authenticated requester. */
+    private UUID ensureMapping(String realIdentity, LoginResult requester) {
         return given()
                 .baseUri(ServiceUrls.IDENTITY)
-                .contentType(ContentType.JSON)
+                .spec(requester.authenticated())
                 .body("""
                       {"realIdentity": "%s"}
                       """.formatted(realIdentity))
@@ -49,7 +49,8 @@ class IdentityLookupAuthzE2E {
     @Test
     @DisplayName("Regular user without identity:lookup gets 401 or 403 on lookup endpoint")
     void regularUser_CannotLookUpIdentity() {
-        UUID anonymousId = ensureMapping(TARGET_IDENTITY);
+        LoginResult admin = AuthHelper.loginAsAdmin();
+        UUID anonymousId = ensureMapping(TARGET_IDENTITY, admin);
         LoginResult user = AuthHelper.loginAsUser();
 
         int status = given()
@@ -67,8 +68,8 @@ class IdentityLookupAuthzE2E {
     @Test
     @DisplayName("Admin with identity:lookup gets 200 and the correct real identity")
     void adminWithPermission_CanLookUpIdentity() {
-        UUID anonymousId = ensureMapping(TARGET_IDENTITY);
         LoginResult admin = AuthHelper.loginAsAdmin();
+        UUID anonymousId = ensureMapping(TARGET_IDENTITY, admin);
 
         String resolvedIdentity = given()
                 .baseUri(ServiceUrls.IDENTITY)
@@ -86,7 +87,8 @@ class IdentityLookupAuthzE2E {
     @Test
     @DisplayName("Unauthenticated request to lookup is rejected with 401 or 403")
     void unauthenticated_CannotLookUpIdentity() {
-        UUID anonymousId = ensureMapping("noauth-test@university.edu");
+        LoginResult admin = AuthHelper.loginAsAdmin();
+        UUID anonymousId = ensureMapping("noauth-test@university.edu", admin);
 
         int status = given()
                 .baseUri(ServiceUrls.IDENTITY)
