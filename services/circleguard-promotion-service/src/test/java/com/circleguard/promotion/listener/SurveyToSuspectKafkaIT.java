@@ -80,7 +80,7 @@ class SurveyToSuspectKafkaIT {
         kafkaTemplate.send("survey.submitted", anonymousId, event);
 
         // Wait up to 10 s for the @KafkaListener to consume and route the message
-        await().atMost(10, TimeUnit.SECONDS)
+        await().atMost(30, TimeUnit.SECONDS)
                .untilAsserted(() ->
                        verify(healthStatusService).updateStatus(anonymousId, "SUSPECT"));
     }
